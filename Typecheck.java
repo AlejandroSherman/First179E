@@ -15,18 +15,20 @@ public class Typecheck {
 
         try {
             Node root = MiniJavaParser.Goal();
-            //root.accept(first, table);
-            //root.accept(second, table);
+            //Scope environment = new Scope(root);
+            //root.accept(new FirstVisitor(), environment);
+            //root.accept(new SecondVisitor(), environment);
             System.out.println ("Program type checked successfully");
 
         } catch (ParseException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("Type error");
         }
 
         //SymbolTable testTable = new SymbolTable("a","int");
         //System.out.println(testTable.tempTable);
 
         //termination check
-        System.out.println ("Got to the end of main.");
+        //System.out.println ("Got to the end of main.");
     }
 }
