@@ -1,14 +1,35 @@
 import java.util.HashMap; // system library
 
-//This is just for testing at the moment, not actually setup yet
+//Abstract class, other tables inherit from this
 
-public class SymbolTable {
+//argu.Global.addClass(n.f1.f0.tokenImage, classtable);
+//.isClassType())
+
+public class SymbolTable extends GlobalTable {
    
-    HashMap<String, String> tempTable = new HashMap<String, String>();
+    public HashMap<String, String> table = new HashMap<String, String>();
+
+
+    public SymbolTable() {
+        //System.out.println("Got called in Symbol table.");
+    }
 
     public SymbolTable(String name, String type) {
-        tempTable.put(name, type);
-        System.out.println(tempTable);
+
+    }
+
+    public void addVariable(String name, TypeTable typeTable) {
+        String type;
+        type = typeTable.Type;
+        table.put(name, type);
+    }
+
+    public boolean isClassType(){
+        return false;
+    }
+
+    public void addClass(String name, ClassTable classtable){
+
     }
 
 
