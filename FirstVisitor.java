@@ -68,10 +68,11 @@ public class FirstVisitor extends GJDepthFirst {
 
     @Override
     public Object visit(VarDeclaration n, Object argu) {
-        Type t = n.f0;
-        Identifier id = n.f1;
-        //System.out.println(n.f0.toString());
-        //symbol_table.putMethodVar(id.toString(), n.f0);
+        // get type
+        String t = n.f0.f0.choice.getClass().getSimpleName();
+        // get id
+        String id = n.f1.f0.tokenImage;
+        //symbol_table.putMethodVar(id, t);
         n.f0.accept(this, symbol_table);
         n.f1.accept(this, symbol_table);
         n.f2.accept(this, symbol_table);
