@@ -34,6 +34,7 @@ public class SymbolTable {
         ClassTable class_table = new ClassTable();
         //put in map
         class_map.put(clazz, class_table);
+        this.getClass(clazz).class_name = clazz;
 
         return class_table;
     }
