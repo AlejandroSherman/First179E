@@ -51,7 +51,7 @@ public class FirstVisitor extends GJDepthFirst {
     @Override
     public Object visit(ClassDeclaration n, Object argu) {
         try {
-            String clazz = n.getClass().toString();
+            String clazz = n.f1.f0.toString();
             symbol_table.putClass(clazz);
             symbol_table.getClass(clazz).class_name = n.f1.f0.tokenImage;
             // vars and methods?
