@@ -53,7 +53,6 @@ public class FirstVisitor extends GJDepthFirst {
         try {
             String clazz = n.f1.f0.toString();
             symbol_table.putClass(clazz);
-            symbol_table.getClass(clazz).class_name = n.f1.f0.tokenImage;
             // vars and methods?
             n.f0.accept(this, symbol_table);
             n.f1.accept(this, symbol_table);
