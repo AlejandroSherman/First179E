@@ -1,6 +1,4 @@
-import symboltable.SymbolTable;
 import syntaxtree.Node;
-import typecheckvisitor.*;
 
 import java.io.InputStream;
 
