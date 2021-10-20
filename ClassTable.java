@@ -1,30 +1,30 @@
-import java.util.*;
+import java.util.HashMap;
 
-public class ClassTable extends SymbolTable  {
-    //ClassTable classtable = new ClassTable(n.f1.f0.tokenImage, "java.lang.Object", argu.Global);
-    //classtable.addMethod("main", methodtable);
-    //.addVariable(n.f1.f0.tokenImage, type);
+public class ClassTable extends AbstractTable {
+    public String class_name;
+    public String super_class;  //which class this class derives from
+    public HashMap<String, TypeTable> vars;
+    public HashMap<String,MethodTable> methods;
+
+    //Constructor
+    public ClassTable(){
+        //error if this is called
+    }
+
+    public ClassTable(String className, String superClass, SymbolTable Global){
+        class_name = className;
+        super_class = superClass;
+        vars = new HashMap<String, TypeTable>();
+        methods = new HashMap<String, MethodTable>();
+        //not sure what to do with global yet
+    }
     
-    public HashMap<String, MethodTable> cTable;
-    public HashMap<String, String> localVars = new HashMap<String, String>(); 
-
-    public ClassTable(String name, String superClass, SymbolTable mTable) {
-        //System.out.println("Got called in ClassTable.");
+    //needs an addMethod
+    public void addMethod(String name, MethodTable methodData){
+        methods.put(name, methodData);
     }
 
-    public void addMethod(String classHub, MethodTable methodtable) {
-        cTable.put(classHub,methodtable);
-    }
-
-    @Override
-    public boolean isClassType(){
-        return true;
-    }
-
-    @Override
-    public void addVariable(String name, TypeTable typeTable) {
-        String type;
-        type = typeTable.Type;
-        localVars.put(name, type);
+    public void addVar(String name, TypeTable typeData){
+        vars.put(name, typeData);
     }
 }

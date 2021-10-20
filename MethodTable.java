@@ -1,33 +1,31 @@
-import java.util.*;
+import java.util.HashMap;
 
-public class MethodTable extends SymbolTable {
-    //MethodTable methodtable = new MethodTable("main", n.f1.f0.tokenImage, new TypeTable("main", n.f1.f0.tokenImage);
-    //methodtable.addParameter(n.f11.f0.tokenImage, type);
-    //.addvariable(n.f1.f0.tokenImage, type);
+public class MethodTable extends AbstractTable {
+    public String method_name;
+    public TypeTable type;
+    public HashMap<String, TypeTable> params;
+    public HashMap<String, TypeTable> locals;
+    public String ofClass; //which class the method belongs to
 
-    /*
-    public Type returnType;
-    public Id name;
-    public List<Parameter> parameters;
-    public List<VarDecl> varDecls;
-    public List<Statement> statements;
-    */
-
-    public HashMap<String, String> params = new HashMap<String, String>();
-    public HashMap<String, String> localVars = new HashMap<String, String>(); 
-
-    public MethodTable(String classHub, String name, TypeTable tTable) {
-        //System.out.println("Got called in Method table.");
+    //Constructor
+    public MethodTable(){
+        //error if this is called
     }
 
-    public void addParameter(String name, TypeTable type) {
-
+    //new MethodTable("main", classID, new TypeTable("main", classID);
+    public MethodTable(String name, String classLoc, TypeTable typeData){
+        method_name = name;
+        type = typeData;
+        params = new HashMap<String, TypeTable>();
+        locals = new HashMap<String, TypeTable>();
     }
 
-    @Override
-    public void addVariable(String name, TypeTable typeTable) {
-        String type;
-        type = typeTable.Type;
-        localVars.put(name, type);
+    public void addParam(String name, TypeTable type){
+        params.put(name, type);
     }
+
+    public void addLocal(String name, TypeTable type){
+        locals.put(name, type);
+    }
+
 }

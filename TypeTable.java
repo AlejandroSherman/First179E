@@ -1,19 +1,23 @@
-public class TypeTable extends SymbolTable  {
-    //TypeTable type = new TypeTable("main", n.f1.f0.tokenImage, argu.Global);
-    //TypeTable("main", n.f1.f0.tokenImage);
+//TypeTable indentifies: class or method (and typetable?)
 
+public class TypeTable extends AbstractTable{
     
-    public String Type;
+    public 
+    
+    //new TypeTable("main", classID)
+    //new TypeTable("main", classID, argTable.Global);
+    //new TypeTable(n.f0.f0.which, argTable.MethodName, argTable.ClassName, argTable.Global);
 
-    public TypeTable(String classHub, String name) {
-        //System.out.println("Got called in TypeTable.");
+    TypeTable(String methodName, String className){
+        //need to understand if methodName or Type
+        //also what this table even does
     }
 
-    public TypeTable(String classHub, String name, SymbolTable table) {
-        //System.out.println("Got called in TypeTable.");
+    TypeTable(String methodName, String className, SymbolTable Global){
+
     }
 
-    public TypeTable(int num, String classHub, String name, SymbolTable table) {
-        //System.out.println("Got called in TypeTable.");
+    TypeTable(Integer grammerChoice, String methodName, String className, SymbolTable Global){
+
     }
 }

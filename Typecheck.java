@@ -1,30 +1,28 @@
+import syntaxtree.Node;
 import java.io.InputStream;
-import syntaxtree.*;
 
 public class Typecheck {
-    public static void main(String[] args) {
 
-        InputStream fileStream = System.in; //passes in file from command line piping (java Typecheck < [filename].java)
-        new MiniJavaParser(fileStream); //MiniJavaParser is a singleton
-
-        FirstVisitor first = new FirstVisitor(); //creates the first visitor
-        GlobalTable Global = new GlobalTable();  //creates the Global symbol table
-        //Need to create the second Visitor creation
-
+    public static void main(String [] args) throws Exception {
+        //read in file via <
+        InputStream fileStream = System.in;
+        new MiniJavaParser(fileStream);
+        FirstVisitor first_visitor = new FirstVisitor();
+        //SecondVisitor second_visitor = new SecondVisitor();
+        CompleteTable Global = new CompleteTable(); // Global Symbol Table. Map for classes and map for methods.
         try {
-            Node root = MiniJavaParser.Goal();
-            //root.accept(first, Global); //Currently have no clue why this doesn't accept the FirstVisitor
-            //root.accept(second, Global);
+            Node root = MiniJavaParser.Goal();   // does the parsing.
+            root.accept(first_visitor, Global);  // fills global symbol table.
+            //root.accept(second_visitor, Global); // does the type checking.
             System.out.println("Program type checked successfully");
-
-        } catch (ParseException e) {
+        }
+        catch(Exception e) {
+            System.out.println("Type error");
+            System.out.println(e.getCause());
             e.printStackTrace();
         }
 
-        //SymbolTable testTable = new SymbolTable("a","int");
-        //System.out.println(testTable.tempTable);
-
-        //termination check
-        //System.out.println("Got to the end of main.");
+        //Global.prntTable();
     }
+
 }

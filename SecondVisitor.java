@@ -1,3 +1,5 @@
-public class SecondVisitor {
-    
+import visitor.*;
+
+public class SecondVisitor extends GJDepthFirst {
+
 }

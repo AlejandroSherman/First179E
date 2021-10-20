@@ -1,96 +1,131 @@
 import syntaxtree.*;
-import visitor.*;
+import visitor.GJDepthFirst;
 
-public class FirstVisitor extends GJDepthFirst<SymbolTable, SymbolTable> {
+public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
 
-    //Using lab example as a skeleton
-    //Get a symbol table to store all the classes
+    //OKAY
+    //gets a global table to store classes
     @Override
-    public SymbolTable visit(Goal n, SymbolTable argu) {
-        n.f0.accept(this, argu); //main class
-        n.f1.accept(this, argu); //nodelist
-        n.f2.accept(this, argu); //node token
+    public AbstractTable visit(Goal n, AbstractTable argTable){
+        n.f0.accept(this, argTable);
+        n.f1.accept(this, argTable);
+        n.f2.accept(this, argTable);
         return null;
     }
- 
-    //Using lab example as a skeleton
-    //Set the type of the Identifier, first need to check whether it's a class type
+
+    //OKAY
+    // Called when visiting the program's main class
     @Override
-    public SymbolTable visit(Identifier n, SymbolTable argu){
+    public AbstractTable visit(MainClass n, AbstractTable argTable) {
+        //get class name
+        String classID = n.f1.f0.tokenImage;
 
-        //Only if the ID's type is TypeTable can edit, if it's MethodName or ClassName, it wouldn't work
-        if(argu instanceof TypeTable && ((TypeTable)argu).isClassType())
-            ((TypeTable)argu).Type = n.f0.tokenImage;
+        ClassTable classData = new ClassTable(classID, "java.lang.Object", argTable.Global);
+        MethodTable methodData = new MethodTable("main", classID, new TypeTable("main", classID));
+        TypeTable type = new TypeTable("main", classID, argTable.Global);
+        methodData.addParam(n.f11.f0.tokenImage, type);
+        classData.addMethod("main", methodData);
+        argTable.Global.addClass(classID, classData);
 
-        n.f0.accept(this, argu); //Node token
+        n.f0.accept(this, classData);
+        n.f1.accept(this, classData);
+        n.f2.accept(this, classData);
+        n.f3.accept(this, methodData);
+        n.f4.accept(this, methodData);
+        n.f5.accept(this, methodData);
+        n.f6.accept(this, methodData);
+        n.f7.accept(this, methodData);
+        n.f8.accept(this, methodData);
+        n.f9.accept(this, methodData);
+        n.f10.accept(this, methodData);
+        n.f11.accept(this, methodData);
+        n.f12.accept(this, methodData);
+        n.f13.accept(this, methodData);
+        n.f14.accept(this, methodData);
+        n.f15.accept(this, methodData);
+        n.f16.accept(this, classData);
 
-        return null;
-    }
- 
-    //Using lab example as a skeleton
-    //Get a class table of the main class and a method table of main method
-    @Override
-    public SymbolTable visit(MainClass n, SymbolTable argu){
-        ClassTable classtable = new ClassTable(n.f1.f0.tokenImage, "java.lang.Object", argu.Global);
-        MethodTable methodtable = new MethodTable("main", n.f1.f0.tokenImage, new TypeTable("main", n.f1.f0.tokenImage));
-        TypeTable type = new TypeTable("main", n.f1.f0.tokenImage, argu.Global);
-        methodtable.addParameter(n.f11.f0.tokenImage, type);
-        classtable.addMethod("main", methodtable);
-        argu.Global.addClass(n.f1.f0.tokenImage, classtable);
-
-        n.f0.accept(this, classtable);
-        n.f1.accept(this, classtable);
-        n.f2.accept(this, classtable);
-        n.f3.accept(this, methodtable);
-        n.f4.accept(this, methodtable);
-        n.f5.accept(this, methodtable);
-        n.f6.accept(this, methodtable);
-        n.f7.accept(this, methodtable);
-        n.f8.accept(this, methodtable);
-        n.f9.accept(this, methodtable);
-        n.f10.accept(this, methodtable);
-        n.f11.accept(this, methodtable);
-        n.f12.accept(this, methodtable);
-        n.f13.accept(this, methodtable);
-        n.f14.accept(this, methodtable);
-        n.f15.accept(this, methodtable);
-        n.f16.accept(this, classtable);
-
-        return classtable;
+        return classData;
     }
 
-    //Using lab example as a skeleton
+    //OKAY
+    // Called when visiting a class of the program
     @Override
-    public SymbolTable visit(ClassDeclaration n, SymbolTable argu){
+    public AbstractTable visit(ClassDeclaration n, AbstractTable argTable) {
+        
         //All the classes extends from java.lang.Object
-        ClassTable classtable = new ClassTable(n.f1.f0.tokenImage, "java.lang.Object", argu.Global);
+        String classID = n.f1.f0.tokenImage;
+        ClassTable classData = new ClassTable(classID, "java.lang.Object", argTable.Global);
 
-        n.f0.accept(this, classtable);
-        n.f1.accept(this, classtable);
-        n.f2.accept(this, classtable);
-        n.f3.accept(this, classtable);
-        n.f4.accept(this, classtable);
-        n.f5.accept(this, classtable);
+        n.f0.accept(this, classData);
+        n.f1.accept(this, classData);
+        n.f2.accept(this, classData);
+        n.f3.accept(this, classData);
+        n.f4.accept(this, classData);
+        n.f5.accept(this, classData);
 
         //AllClassTable need to add every new class
-        argu.Global.addClass(n.f1.f0.tokenImage, classtable);
-        return classtable;
+        argTable.Global.addClass(classID, classData);
+
+        return classData;
     }
 
-    //Using lab example as a skeleton
+    //OKAY
+    // Called when visiting a variable of the program
     @Override
-    public SymbolTable visit(VarDeclaration n, SymbolTable argu){
-        TypeTable typeTable = new TypeTable(n.f0.f0.which, argu.MethodName, argu.ClassName, argu.Global);
+    public AbstractTable visit(VarDeclaration n, AbstractTable argTable) {
+        TypeTable type;
+        type = new TypeTable(n.f0.f0.which, argTable.MethodName, argTable.ClassName, argTable.Global);
 
-        n.f0.accept(this, typeTable);
+        n.f0.accept(this, type);
 
         //To check whether this variable is a method level variable
-        if(argu instanceof MethodTable) ((MethodTable)argu).addVariable(n.f1.f0.tokenImage, typeTable);
-        else if(argu instanceof ClassTable) ((ClassTable)argu).addVariable(n.f1.f0.tokenImage, typeTable);
+        if(argTable instanceof MethodTable) ((MethodTable)argTable).addLocal(n.f1.f0.tokenImage, type);
+        else if(argTable instanceof ClassTable) ((ClassTable)argTable).addVar(n.f1.f0.tokenImage, type);
 
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return typeTable;
+        n.f1.accept(this, argTable);
+        n.f2.accept(this, argTable);
+
+        return type;
     }
- 
+
+/*
+    // Called when visiting a method of the program
+    @Override
+    public AbstractTable visit(MethodDeclaration n, AbstractTable argTable) {
+        try {
+            // get return type
+            String ret_type = n.f1.f0.choice.getClass().getSimpleName();
+            // get id
+            String id = n.f2.f0.tokenImage;
+            argTable.currMethodName = id;
+            
+            
+
+            // get class
+
+            argTable.class_map.put(id, new ClassTable());
+            argTable.putClassMethod(id, ret_type, id);
+            n.f0.accept(this, argTable);
+            n.f1.accept(this, argTable);
+            n.f2.accept(this, argTable);
+            n.f3.accept(this, argTable);
+            n.f4.accept(this, argTable);
+            n.f5.accept(this, argTable);
+            n.f6.accept(this, argTable);
+            n.f7.accept(this, argTable);
+            n.f8.accept(this, argTable);
+            n.f9.accept(this, argTable);
+            n.f10.accept(this, argTable);
+            n.f11.accept(this, argTable);
+            n.f12.accept(this, argTable);
+        } catch(Exception e){
+            System.out.println("Type error");
+            System.exit(1);
+            //e.printStackTrace();
+        }
+        return null;
+    }
+*/
+
 }

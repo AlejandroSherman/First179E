@@ -1,36 +1,27 @@
-import java.util.HashMap; // system library
+// book talks about red-black tree https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html
+// map class https://docs.oracle.com/javase/8/docs/api/java/util/Map.html
+// treemap vs hashmap. treemap has order so may be better for scope https://www.baeldung.com/java-treemap-vs-hashmap
 
-//Abstract class, other tables inherit from this
+import java.util.HashMap;
 
-//argu.Global.addClass(n.f1.f0.tokenImage, classtable);
-//.isClassType())
+public class SymbolTable extends AbstractTable {
+    public HashMap<String, ClassTable> classes;
 
-public class SymbolTable extends GlobalTable {
-   
-    public HashMap<String, String> table = new HashMap<String, String>();
-
-
-    public SymbolTable() {
-        //System.out.println("Got called in Symbol table.");
+    // Constructor
+    public SymbolTable(){
+        classes = new HashMap<String, ClassTable>();
     }
 
-    public SymbolTable(String name, String type) {
-
+    // Constructor
+    public SymbolTable(String className, String superClass, ClassTable class_Table) {
+        classes = new HashMap<String, ClassTable>();
+        classes.put(className, class_Table);
     }
 
-    public void addVariable(String name, TypeTable typeTable) {
-        String type;
-        type = typeTable.Type;
-        table.put(name, type);
+    // need addClass
+    public void addClass(String name, ClassTable classData){
+        classes.put(name, classData);
     }
-
-    public boolean isClassType(){
-        return false;
-    }
-
-    public void addClass(String name, ClassTable classtable){
-
-    }
-
 
 }
+
