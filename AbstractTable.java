@@ -2,11 +2,6 @@
 
 public class AbstractTable {
     public SymbolTable Global;
-    public String MethodName; //no idea how this works either
-    public String ClassName;  //no idea how this works either
-
-    // testing
-    public void prntTable() {
-        System.out.println(Global);
-    }
+    public String MethodName;
+    public String ClassName;
 }

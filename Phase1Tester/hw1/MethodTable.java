@@ -14,22 +14,18 @@ public class MethodTable extends AbstractTable {
 
     //new MethodTable("main", classID, new TypeTable("main", classID);
     public MethodTable(String name, String classLoc, TypeTable typeData){
-        MethodName = name;  //Set global
-        method_name = name; //Set local
+        method_name = name;
         type = typeData;
         params = new HashMap<String, TypeTable>();
         locals = new HashMap<String, TypeTable>();
     }
 
-    public void addParam(String name, TypeTable typeData){
-        params.put(name, typeData);
+    public void addParam(String name, TypeTable type){
+        params.put(name, type);
     }
 
-    public void addLocal(String name, TypeTable typeData){
-        //System.out.println("Method Local: I am inserting " + name + "from " + typeData.ClassName +  "->" + typeData.MethodName);
-        locals.put(name, typeData);
+    public void addLocal(String name, TypeTable type){
+        locals.put(name, type);
     }
-
-
 
 }
