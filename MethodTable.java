@@ -1,25 +1,35 @@
 import java.util.HashMap;
-import java.util.Map;
 
-
-public class MethodTable {
+public class MethodTable extends AbstractTable {
     public String method_name;
-    public String return_type;
-    public Map<String, String> params;
-    public Map<String, String> locals;
+    public TypeTable type;
+    public HashMap<String, String> params;
+    public HashMap<String, String> locals;
+    public String ofClass; //which class the method belongs to
 
     //Constructor
     public MethodTable(){
-        method_name = null;
-        return_type = null;
+        //error if this is called
+    }
+
+    //new MethodTable("main", classID, new TypeTable("main", classID);
+    public MethodTable(String name, String classLoc, TypeTable typeData){
+        MethodName = name;  //Set global
+        method_name = name; //Set local
+        type = typeData;
         params = new HashMap<String, String>();
         locals = new HashMap<String, String>();
     }
-    public MethodTable(String name, String ret_type){
-        method_name = name;
-        return_type = ret_type;
-        params = new HashMap<String, String>();
-        locals = new HashMap<String, String>();
+
+    public void addParam(String name, String typeData){
+        params.put(name, typeData);
     }
+
+    public void addLocal(String name, String typeData){
+        //System.out.println("Method Local: I am inserting " + name + "from " + typeData.ClassName +  "->" + typeData.MethodName);
+        locals.put(name, typeData);
+    }
+
+
 
 }

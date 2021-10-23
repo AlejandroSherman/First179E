@@ -1,23 +1,37 @@
-import syntaxtree.Type;
-
 import java.util.HashMap;
-import java.util.Map;
 
-public class ClassTable {
+public class ClassTable extends AbstractTable {
     public String class_name;
-    public HashMap<String, Type> vars;
+    public String super_class;  //which class this class derives from
+    public HashMap<String, TypeTable> vars;
     public HashMap<String,MethodTable> methods;
 
     //Constructor
     public ClassTable(){
-        class_name = null;
-        vars = new HashMap<String, Type>();
-        methods = new HashMap<String, MethodTable>();
+        //error if this is called
     }
 
-    public ClassTable(String clazz, Map class_fields, Map class_methods){
-        class_name = clazz;
-        vars = new HashMap<String, Type>(class_fields);
-        methods = new HashMap<String, MethodTable>(class_methods);
+    public ClassTable(String className, String superClass, SymbolTable Global){
+        ClassName = className;  //Set global
+        class_name = className; //Set local
+        super_class = superClass;
+        vars = new HashMap<String, TypeTable>();
+        methods = new HashMap<String, MethodTable>();
+        //not sure what to do with global yet (probably add it to global table)
+    }
+
+    //needs an addMethod
+    public void addMethod(String name, MethodTable methodData){
+        methods.put(name, methodData);
+    }
+
+    public void addVar(String name, TypeTable typeData){
+        //System.out.println("Class var: I am inserting " + name + "from " + typeData.ClassName +  "->" + typeData.MethodName);
+        vars.put(name, typeData);
+    }
+
+    //testing
+    public void updateMethodName(String name){
+        MethodName = name;  //Set global
     }
 }
