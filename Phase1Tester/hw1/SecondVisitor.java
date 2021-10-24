@@ -223,8 +223,12 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         exRetType = mTable.returnType;
 
         n.f10.accept(this, argTable);
+
+        isReturning = false;
+
         n.f11.accept(this, argTable);
         n.f12.accept(this, argTable);
+
         return _ret;
     }
 
@@ -258,7 +262,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
                     }   
                 } 
             }
-            isReturning = false;
         }
         if(isAssignRHS){
             //System.out.println(n.f0.choice.getClass().getSimpleName());
@@ -277,6 +280,35 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     public AbstractTable visit(Identifier n, AbstractTable argu) {
         AbstractTable _ret=null;
  
+        if(isReturning) {
+            //System.out.println("returning var" + n.f0.tokenImage);
+            String returnName = n.f0.tokenImage;
+
+            //Check locals for return type locals
+            ClassTable cTable = argu.Global.classes.get(inClass);
+            MethodTable mTable = cTable.methods.get(inMethod);
+
+            //Ignore classes for now
+            if(exRetType.equals("Identifier")){
+
+            }
+            else if(mTable.locals.get(returnName) != null) {
+                String returnType = mTable.locals.get(returnName);
+                returnType = dictionary.getRealType(returnType);
+                exRetType = dictionary.getRealType(exRetType);
+
+                try{
+                    if(!returnType.equals(exRetType)) throw new Exception("ERROR - Invalid return type.");
+                }
+                catch(Exception e){
+                    //System.out.println(returnType + " != " + exRetType);
+                    System.out.println("Type error");
+                    System.exit(1);
+                }   
+            }
+            
+        }
+
         if(isAssignLHS) {
             //System.out.println(lhsType + " vs " + n.f0.choice.getClass().getSimpleName());
             //System.out.println("LHS name: " + n.f0.tokenImage);
