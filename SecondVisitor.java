@@ -7,11 +7,14 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     String inMethod;
     Boolean isReturning = false;
     String exRetType;
-    //Boolean isAssign = false;
     Boolean isAssignLHS = false;
     Boolean isAssignRHS = false;
     String lhsType;
     String rhsName;
+    Boolean isArray = false;
+    Boolean isIndex = false;
+    String arrayType;
+    String indexType;
 
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argTable){
@@ -281,17 +284,17 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         AbstractTable _ret=null;
  
         if(isReturning) {
-            //System.out.println("returning var" + n.f0.tokenImage);
-            String returnName = n.f0.tokenImage;
-
-            //Check locals for return type locals
             ClassTable cTable = argu.Global.classes.get(inClass);
             MethodTable mTable = cTable.methods.get(inMethod);
+
+            //System.out.println("returning var" + n.f0.tokenImage);
+            String returnName = n.f0.tokenImage;
 
             //Ignore classes for now
             if(exRetType.equals("Identifier")){
 
             }
+            //Check locals for return type locals
             else if(mTable.locals.get(returnName) != null) {
                 String returnType = mTable.locals.get(returnName);
                 returnType = dictionary.getRealType(returnType);
@@ -308,7 +311,135 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
             }
             
         }
+        else if(isArray) {
+            ClassTable cTable = argu.Global.classes.get(inClass);
+            MethodTable mTable = cTable.methods.get(inMethod);
+            String arrayName = n.f0.tokenImage;
 
+            //Gets arrayType
+            try {
+                boolean isFound = false;
+                //Check Locals
+                if(mTable.locals.get(arrayName) == null) {
+                    //Check parameters
+                    for (String paramsName: mTable.params.keySet()) {
+                        if(arrayName == paramsName){
+                            isFound = true;
+                            arrayType = mTable.params.get(arrayName).dataType;
+                        }
+                    }
+                    //Check class vars
+                    if(!isFound){
+                        for (String varsName: cTable.vars.keySet()) {
+                            if(arrayName == varsName){
+                                isFound = true;
+                                arrayType = cTable.vars.get(arrayName).dataType;
+                            }
+                        }
+                        //Check class methods for "this"
+                        if(cTable.methods.get(arrayName) != null) {
+                            isFound = true;
+                        }
+                        //Check super class(es)
+                        if(!isFound){
+                            String superClass = cTable.super_class;
+                            ClassTable tempTable;
+                            while (superClass != null){
+                                tempTable = argu.Global.classes.get(superClass);
+                                if(tempTable.vars.get(arrayName) != null) {
+                                    isFound = true;
+                                    arrayType = tempTable.vars.get(arrayName).dataType;
+                                }
+                                //Check super class(es) methods for "this"
+                                if(cTable.methods.get(arrayName) != null) {
+                                    isFound = true;
+                                }
+                                superClass = tempTable.super_class;
+                            }
+                        }
+                    }
+
+                    //Else not found
+                    if(!isFound) throw new Exception("ERROR - " + arrayName + "does not exist in scope.");
+                }
+                //Else is found
+                else isFound = true;
+
+            }
+            catch(Exception e){
+                //System.out.println("Type error on: " + leftSideName + " = " + rhsName + ",  RHS not found  " + inClass + "->" + inMethod);
+                System.out.println("Type error");
+                System.exit(1);
+            }
+            
+        }
+        else if(isIndex) {
+            ClassTable cTable = argu.Global.classes.get(inClass);
+            MethodTable mTable = cTable.methods.get(inMethod);
+            String indexName = n.f0.tokenImage;
+
+            //Gets indexType
+            try {
+                boolean isFound = false;
+                //Check Locals
+                if(mTable.locals.get(indexName) == null) {
+                    //Check parameters
+                    for (String paramsName: mTable.params.keySet()) {
+                        if(indexName == paramsName){
+                            isFound = true;
+                            indexType = mTable.params.get(indexName).dataType;
+                        }
+                    }
+                    //Check class vars
+                    if(!isFound){
+                        for (String varsName: cTable.vars.keySet()) {
+                            if(indexName == varsName){
+                                isFound = true;
+                                indexType = cTable.vars.get(indexName).dataType;
+                            }
+                        }
+                        //Check class methods for "this"
+                        if(cTable.methods.get(indexName) != null) {
+                            isFound = true;
+                        }
+                        //Check super class(es)
+                        if(!isFound){
+                            String superClass = cTable.super_class;
+                            ClassTable tempTable;
+                            while (superClass != null){
+                                tempTable = argu.Global.classes.get(superClass);
+                                if(tempTable.vars.get(indexName) != null) {
+                                    isFound = true;
+                                    indexType = tempTable.vars.get(indexName).dataType;
+                                }
+                                //Check super class(es) methods for "this"
+                                if(cTable.methods.get(indexName) != null) {
+                                    isFound = true;
+                                }
+                                superClass = tempTable.super_class;
+                            }
+                        }
+                    }
+
+                    //Else not found
+                    if(!isFound) throw new Exception("ERROR - " + indexName + "does not exist in scope.");
+                }
+                //Else is found
+                else {
+                    isFound = true;
+                    indexType = mTable.locals.get(indexName);
+
+                }
+
+            }
+            catch(Exception e){
+                //System.out.println("Type error on: " + leftSideName + " = " + rhsName + ",  RHS not found  " + inClass + "->" + inMethod);
+                System.out.println("Type error");
+                System.exit(1);
+            }
+            
+        }
+        
         if(isAssignLHS) {
             //System.out.println(lhsType + " vs " + n.f0.choice.getClass().getSimpleName());
             //System.out.println("LHS name: " + n.f0.tokenImage);
@@ -327,7 +458,39 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
 
         n.f0.accept(this, argu);
         return _ret;
-     }
+    }
+
+    @Override
+    public AbstractTable visit(ArrayLookup n, AbstractTable argu) {
+        AbstractTable _ret=null;
+
+        isArray = true;
+        n.f0.accept(this, argu); //First expression (the array)
+        isArray = false;
+
+        //System.out.println(arrayType);
+        arrayType = dictionary.getRealType(arrayType);
+        try{
+            if(!arrayType.equals("Array")) throw new Exception("ERROR - accessing a non array.");
+        }
+        catch(Exception e){
+            //System.out.println("Array!=" + arrayType);
+            System.out.println("Type error");
+            System.exit(1);
+        }
+
+        n.f1.accept(this, argu);
+
+        isIndex = true;
+        n.f2.accept(this, argu); //Second expression (the index)
+        isIndex = false;
+
+        //System.out.println(indexType);
+
+        n.f3.accept(this, argu);
+        return _ret;
+    }
+  
 
 
 //Everything below this line is redoing first pass stuff to get class and method names
