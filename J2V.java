@@ -12,7 +12,7 @@ public class J2V {
         InputStream fileStream = System.in;
         new MiniJavaParser(fileStream);
 
-        /*
+    
         FirstVisitor first_visitor = new FirstVisitor();
         SecondVisitor second_visitor = new SecondVisitor();
         CompleteTable completeTable = new CompleteTable(); // Global Symbol Table. Map for classes and map for methods.
@@ -28,7 +28,7 @@ public class J2V {
             System.out.println(e.getCause());
             e.printStackTrace();
         }
-        */
+        
     }
 
 }
