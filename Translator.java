@@ -1,4 +1,4 @@
-public class Translator {
+public class Translator { //converts java -> vapor
 
     // Identifiers are used for two things: variables and labels.
     public void addID(String name, String value) {
