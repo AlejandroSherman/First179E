@@ -6,9 +6,12 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     String inClass;
     String inMethod;
     Boolean isReturning = false;
-    Boolean isVarReturning = false;
     String exRetType;
-    String returnName;
+    //Boolean isAssign = false;
+    Boolean isAssignLHS = false;
+    Boolean isAssignRHS = false;
+    String lhsType;
+    String rhsName;
 
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argTable){
@@ -41,6 +44,7 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     @Override
     public AbstractTable visit(AssignmentStatement n, AbstractTable argTable){
         String leftSideName = n.f0.f0.tokenImage;
+        isAssignLHS = true;
 
         //System.out.println("Class: " + inClass + "    Method: " + inMethod);
         //System.out.println("Left hand side var: " + leftSideName);
@@ -48,15 +52,19 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         ClassTable cTable = argTable.Global.classes.get(inClass);
         MethodTable mTable = cTable.methods.get(inMethod);
 
-        try { 
+        //Checking if the LHS variable exisits
+        try {
+            //Check locals
             if(mTable.locals.get(leftSideName) == null) {
                 boolean isFound = false;
+
                 //Check parameters
                 for (String paramsName: mTable.params.keySet()) {
                     //System.out.println(leftSideName + " vs " + paramsName);
                     if(leftSideName == paramsName){
                         isFound = true;
-                        //System.out.println("I was called");
+                        lhsType = mTable.params.get(leftSideName).dataType;
+                        //System.out.println("Name: " + leftSideName + "  Type: " + lhsType);
                     }
                 }
 
@@ -66,7 +74,8 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
                         //System.out.println(leftSideName + " vs " + varsName);
                         if(leftSideName == varsName){
                             isFound = true;
-                            //System.out.println("I was called");
+                            lhsType = cTable.vars.get(leftSideName).dataType;
+                            //System.out.println("Name: " + leftSideName + "  Type: " + lhsType);
                         }
                     }
 
@@ -76,20 +85,116 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
                         ClassTable tempTable;
                         while (superClass != null){
                             tempTable = argTable.Global.classes.get(superClass);
-                            if(tempTable.vars.get(leftSideName) != null) isFound = true;
+                            if(tempTable.vars.get(leftSideName) != null) {
+                                isFound = true;
+                                lhsType = tempTable.vars.get(leftSideName).dataType;
+                                //System.out.println("Name: " + leftSideName + "  Type: " + lhsType);
+                            }
                             superClass = tempTable.super_class;
                         }
                     }
                 }
                 if(!isFound) throw new Exception("ERROR - " + leftSideName + "does not exist in scope.");
             }
+            else {
+                lhsType = mTable.locals.get(leftSideName);
+                //System.out.println("Name: " + leftSideName + "  Type: " + lhsType);
+            }
         }
         catch(Exception e){
-            //System.out.println("Class: " + inClass + "    Method: " + inMethod);
-            //System.out.println("Left hand side var: " + leftSideName);
+            //System.out.println("Type error on: " + leftSideName + " = " + rhsName + ",  LHS not found  " + inClass + "->" + inMethod);
             System.out.println("Type error");
             System.exit(1);
         }
+
+        n.f0.accept(this, argTable);
+        n.f1.accept(this, argTable);
+        n.f2.accept(this, argTable);
+
+        //Checking RHS variable
+        //System.out.println("Checking the RHS");
+        if (!lhsType.equals("Identifier")){ //Ignoring classes            
+            try {
+                //System.out.println("Left hand side var: " + leftSideName);
+                //System.out.println("Right hand side var: " + rhsName);
+                boolean isFound = false;
+
+                //Check for counter or raw data
+                if(rhsName.equals("Int") || rhsName.equals("Bool")) isFound = true;
+
+                //Ignoring classes for now
+                else if(lhsType.equals("Identifier")){
+                    //System.out.println(leftSideName + " is of type Class" );
+                    //leftSideName = rhsName;
+                    isFound = true;
+                }
+
+                //Check Locals
+                else if(mTable.locals.get(rhsName) == null) {
+
+                    //Check parameters
+                    for (String paramsName: mTable.params.keySet()) {
+                        if(rhsName == paramsName){
+                            isFound = true;
+                            lhsType = mTable.params.get(rhsName).dataType;
+                        }
+                    }
+
+                    //Check class vars
+                    if(!isFound){
+                        for (String varsName: cTable.vars.keySet()) {
+                            if(rhsName == varsName){
+                                isFound = true;
+                                lhsType = cTable.vars.get(rhsName).dataType;
+                            }
+                        }
+
+                        //Check class methods for "this"
+                        if(cTable.methods.get(rhsName) != null) {
+                            isFound = true;
+                        }
+
+                        //Check super class(es)
+                        if(!isFound){
+                            String superClass = cTable.super_class;
+                            ClassTable tempTable;
+                            while (superClass != null){
+                                tempTable = argTable.Global.classes.get(superClass);
+                                if(tempTable.vars.get(rhsName) != null) {
+                                    isFound = true;
+                                    lhsType = tempTable.vars.get(rhsName).dataType;
+                                }
+
+                                //Check super class(es) methods for "this"
+                                if(cTable.methods.get(rhsName) != null) {
+                                    isFound = true;
+                                }
+
+                                superClass = tempTable.super_class;
+                            }
+                        }
+                    }
+
+                    //Else not found
+                    if(!isFound) throw new Exception("ERROR - " + rhsName + "does not exist in scope.");
+                }
+
+                //Else is found
+                else {
+                    isFound = true;
+                    //System.out.println("Type OKAY: " + leftSideName + " = " + rhsName + ",  found in  " + inClass + "->" + inMethod);
+                }
+
+            }
+            catch(Exception e){
+                //System.out.println("Type error on: " + leftSideName + " = " + rhsName + ",  RHS not found  " + inClass + "->" + inMethod);
+                System.out.println("Type error");
+                System.exit(1);
+            }
+        }
+        //System.out.println('\n');
+
+        n.f3.accept(this, argTable);
 
         return null;
     }
@@ -124,7 +229,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     }
 
 
-
     @Override
     public AbstractTable visit(PrimaryExpression n, AbstractTable argu) {
         AbstractTable _ret=null;
@@ -156,11 +260,43 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
             }
             isReturning = false;
         }
+        if(isAssignRHS){
+            //System.out.println(n.f0.choice.getClass().getSimpleName());
+            String rhsType = n.f0.choice.getClass().getSimpleName();
+            if(rhsType.equals("IntegerLiteral")) rhsName = "Int";
+            else if (rhsType.equals("TrueLiteral")) rhsName = "Bool";
+            else if (rhsType.equals("FalseLiteral")) rhsName = "Bool";
+        }
 
         n.f0.accept(this, argu);
 
         return _ret;
+    }
+
+    @Override
+    public AbstractTable visit(Identifier n, AbstractTable argu) {
+        AbstractTable _ret=null;
+ 
+        if(isAssignLHS) {
+            //System.out.println(lhsType + " vs " + n.f0.choice.getClass().getSimpleName());
+            //System.out.println("LHS name: " + n.f0.tokenImage);
+            //System.out.println("LHS ("+ n.f0.tokenImage+") in " + inClass + "->"+ inMethod);
+            isAssignLHS = false;  
+            isAssignRHS = true;          
+        }
+        else if(isAssignRHS){
+            //System.out.println("RHS name: " + n.f0.tokenImage);
+            rhsName = n.f0.tokenImage;   
+            if(rhsName.equals("i")) rhsName = "Int";
+            //if(rhsName.equals("val")) System.out.println("val found in " + inClass + "->"+ inMethod);
+            //System.out.println("RHS ("+ n.f0.tokenImage+") in " + inClass + "->"+ inMethod);
+            isAssignRHS = false;
+        }
+
+        n.f0.accept(this, argu);
+        return _ret;
      }
+
 
 //Everything below this line is redoing first pass stuff to get class and method names
 /**************************************************************************************/

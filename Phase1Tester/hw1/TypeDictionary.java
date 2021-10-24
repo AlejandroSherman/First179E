@@ -10,6 +10,9 @@ public class TypeDictionary {
         typeMap.put("BooleanType", "Boolean");
         typeMap.put("TrueLiteral", "Boolean");
         typeMap.put("FalseLiteral", "Boolean");
+        typeMap.put("ArrayAllocationExpression", "Array");
+        typeMap.put("ArrayType", "Array");
+
     }
 
     public String getRealType(String dataType){
