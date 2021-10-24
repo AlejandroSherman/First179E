@@ -18,14 +18,17 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argTable) {
         //get class name
-        String classID = n.f1.f0.tokenImage;
+        String className = n.f1.f0.tokenImage;
 
-        ClassTable classData = new ClassTable(classID, "java.lang.Object", argTable.Global);
-        MethodTable methodData = new MethodTable("main", classID, new TypeTable("main", classID));
-        TypeTable type = new TypeTable("main", classID, argTable.Global);
+        ClassTable classData = new ClassTable(className, "java.lang.Object", argTable.Global);
+        MethodTable methodData = new MethodTable("main", className, "IntegerType", new TypeTable("main", className));
+        TypeTable type = new TypeTable("main", className, argTable.Global);
         methodData.addParam(n.f11.f0.tokenImage, type);
         classData.addMethod("main", methodData);
-        argTable.Global.addClass(classID, classData);
+        argTable.Global.addClass(className, classData);
+
+        //System.out.println("className: "+className);
+        //System.out.println("addParam: "+n.f11.f0.tokenImage);
 
         n.f0.accept(this, classData);
         n.f1.accept(this, classData);
@@ -57,6 +60,8 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         String classID = n.f1.f0.tokenImage;
         ClassTable classData = new ClassTable(classID, "java.lang.Object", argTable.Global);
 
+        //System.out.println("classID: "+ classID);
+
         n.f0.accept(this, classData);
         n.f1.accept(this, classData);
         n.f2.accept(this, classData);
@@ -74,14 +79,32 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     // Called when visiting a variable of the program
     @Override
     public AbstractTable visit(VarDeclaration n, AbstractTable argTable) {
-        TypeTable type;
-        type = new TypeTable(n.f0.f0.which, argTable.MethodName, argTable.ClassName, argTable.Global);
+        //Identifier means its a class
+        String dataType = n.f0.f0.choice.getClass().getSimpleName();
+        String varName = n.f1.f0.tokenImage;
+        
+        TypeTable type = new TypeTable(n.f0.f0.which, argTable.MethodName, argTable.ClassName, dataType, argTable.Global);
+
+        //System.out.println(argTable.ClassName + "->" + argTable.MethodName + "->" + varName);
 
         n.f0.accept(this, type);
 
         //To check whether this variable is a method level variable
-        if(argTable instanceof MethodTable) ((MethodTable)argTable).addLocal(n.f1.f0.tokenImage, type);
-        else if(argTable instanceof ClassTable) ((ClassTable)argTable).addVar(n.f1.f0.tokenImage, type);
+        //System.out.println(argTable.getClass().getSimpleName()); 
+
+        //This is a hacky way to handle this (not good)
+        if(argTable.MethodName == null) ((ClassTable)argTable).addVar(varName, type); // its a class variable
+        else {
+            //String className = argTable.ClassName;
+            //String methodName = argTable.MethodName;
+            //System.out.println(className + " " + methodName);
+            ClassTable classTable = (ClassTable)argTable;
+            MethodTable methodTable = classTable.methods.get(argTable.MethodName);
+            methodTable.addLocal(varName, type);
+        }
+
+        //if(argTable instanceof MethodTable) ((MethodTable)argTable).addLocal(varName, type);
+        //else if(argTable instanceof ClassTable) ((ClassTable)argTable).addVar(varName, type);
 
         n.f1.accept(this, argTable);
         n.f2.accept(this, argTable);
@@ -89,43 +112,49 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         return type;
     }
 
-/*
     // Called when visiting a method of the program
     @Override
     public AbstractTable visit(MethodDeclaration n, AbstractTable argTable) {
-        try {
-            // get return type
-            String ret_type = n.f1.f0.choice.getClass().getSimpleName();
-            // get id
-            String id = n.f2.f0.tokenImage;
-            argTable.currMethodName = id;
-            
-            
+        // get return type
+        String ret_type = n.f1.f0.choice.getClass().getSimpleName();
+        // get method name
+        String methodName = n.f2.f0.tokenImage;
+        // get the method's class name
+        String ofClass = argTable.ClassName;
+        //System.out.println("of class: " + ofClass);
 
-            // get class
+        MethodTable methodData = new MethodTable(methodName, ofClass, ret_type, new TypeTable(methodName, ofClass));       
+        ( (ClassTable)argTable ).addMethod(methodName, methodData);
+        ( (ClassTable)argTable ).updateMethodName(methodName); //Updates the current method name (not permanent)
 
-            argTable.class_map.put(id, new ClassTable());
-            argTable.putClassMethod(id, ret_type, id);
-            n.f0.accept(this, argTable);
-            n.f1.accept(this, argTable);
-            n.f2.accept(this, argTable);
-            n.f3.accept(this, argTable);
-            n.f4.accept(this, argTable);
-            n.f5.accept(this, argTable);
-            n.f6.accept(this, argTable);
-            n.f7.accept(this, argTable);
-            n.f8.accept(this, argTable);
-            n.f9.accept(this, argTable);
-            n.f10.accept(this, argTable);
-            n.f11.accept(this, argTable);
-            n.f12.accept(this, argTable);
-        } catch(Exception e){
-            System.out.println("Type error");
-            System.exit(1);
-            //e.printStackTrace();
-        }
-        return null;
+        n.f0.accept(this, argTable);
+        n.f1.accept(this, argTable);
+        n.f2.accept(this, argTable);
+        n.f3.accept(this, argTable);
+        n.f4.accept(this, argTable);
+        n.f5.accept(this, argTable);
+        n.f6.accept(this, argTable);
+        n.f7.accept(this, argTable);
+        n.f8.accept(this, argTable);
+        n.f9.accept(this, argTable);
+        n.f10.accept(this, argTable);
+        n.f11.accept(this, argTable);
+        n.f12.accept(this, argTable);
+
+        return methodData;
     }
-*/
+
+    @Override
+    public AbstractTable visit(FormalParameter n, AbstractTable argu) {
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu);
+        n.f1.accept(this, argu);
+
+        TypeTable typeData = new TypeTable(argu.MethodName, argu.ClassName, n.f0.f0.choice.getClass().getSimpleName(), argu.Global);
+        MethodTable method = ((ClassTable)argu).methods.get(argu.MethodName);
+        method.addParam(n.f1.f0.tokenImage, typeData);
+
+        return _ret;
+     }
 
 }

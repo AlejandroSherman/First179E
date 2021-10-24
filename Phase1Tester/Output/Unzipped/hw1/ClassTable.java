@@ -12,11 +12,12 @@ public class ClassTable extends AbstractTable {
     }
 
     public ClassTable(String className, String superClass, SymbolTable Global){
-        class_name = className;
+        ClassName = className;  //Set global
+        class_name = className; //Set local
         super_class = superClass;
         vars = new HashMap<String, TypeTable>();
         methods = new HashMap<String, MethodTable>();
-        //not sure what to do with global yet
+        //not sure what to do with global yet (probably add it it global table)
     }
     
     //needs an addMethod
@@ -25,6 +26,12 @@ public class ClassTable extends AbstractTable {
     }
 
     public void addVar(String name, TypeTable typeData){
+        //System.out.println("Class var: I am inserting " + name + "from " + typeData.ClassName +  "->" + typeData.MethodName);
         vars.put(name, typeData);
+    }
+
+    //testing 
+    public void updateMethodName(String name){
+        MethodName = name;  //Set global
     }
 }

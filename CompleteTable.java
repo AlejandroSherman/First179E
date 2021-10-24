@@ -31,7 +31,8 @@ public class CompleteTable extends AbstractTable {
                 //Print params of method
                 System.out.println("        Params:");
                 for (String paramsName: tempTable2.params.keySet()) {
-                    System.out.println("            " + paramsName);
+                    String type = tempTable2.params.get(paramsName).dataType;
+                    System.out.println("            " + type  + "  " + paramsName);
                 }
 
                 //Print local vars of method

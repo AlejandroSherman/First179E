@@ -1,1 +1,19 @@
-Program type checked successfully
+Type error
+null
+java.lang.ClassCastException: class CompleteTable cannot be cast to class ClassTable (CompleteTable and ClassTable are in unnamed module of loader 'app')
+	at FirstVisitor.visit(FirstVisitor.java:96)
+	at FirstVisitor.visit(FirstVisitor.java:4)
+	at syntaxtree.VarDeclaration.accept(VarDeclaration.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:166)
+	at syntaxtree.ClassExtendsDeclaration.accept(ClassExtendsDeclaration.java:54)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:126)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at FirstVisitor.visit(FirstVisitor.java:11)
+	at FirstVisitor.visit(FirstVisitor.java:4)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Typecheck.main(Typecheck.java:25)

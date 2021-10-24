@@ -144,4 +144,17 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         return methodData;
     }
 
+    @Override
+    public AbstractTable visit(FormalParameter n, AbstractTable argu) {
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu);
+        n.f1.accept(this, argu);
+
+        TypeTable typeData = new TypeTable(argu.MethodName, argu.ClassName, n.f0.f0.choice.getClass().getSimpleName(), argu.Global);
+        MethodTable method = ((ClassTable)argu).methods.get(argu.MethodName);
+        method.addParam(n.f1.f0.tokenImage, typeData);
+
+        return _ret;
+     }
+
 }

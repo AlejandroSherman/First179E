@@ -5,8 +5,7 @@ import java.io.InputStream;
 //TO DO
 
 //First Pass
-//Still need properly store types for vars, class declarations, and method returns type
-//Parameters of methods are not being stored at the moment (having trouble getting them)
+//Still need properly store types for class declarations
 
 //Second Pass
 //Second pass / type checking still needs to happen
@@ -24,6 +23,7 @@ public class Typecheck {
         try {
             Node root = MiniJavaParser.Goal();   // does the parsing.
             root.accept(first_visitor, completeTable);  // fills global symbol table.
+            //completeTable.prntTable();
             root.accept(second_visitor, completeTable); // does the type checking.
             System.out.println("Program type checked successfully");
         }
@@ -31,9 +31,7 @@ public class Typecheck {
             System.out.println("Type error");
             System.out.println(e.getCause());
             e.printStackTrace();
-        }
-
-        //completeTable.prntTable();
+        }   
     }
 
 }
