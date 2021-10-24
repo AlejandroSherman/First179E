@@ -1,6 +1,8 @@
 //this will store the entire class symbol table for the program
 
 public class CompleteTable extends AbstractTable {
+    //public GlobalTypeTable;
+    
     CompleteTable(){
         Global = new SymbolTable();
     }
@@ -16,7 +18,7 @@ public class CompleteTable extends AbstractTable {
             ClassTable tempTable = Global.classes.get(className);
             System.out.println("    Vars in class " + className + ": ");
            
-            //Print vars of a class
+            //Print vars of class
             for (String varName: tempTable.vars.keySet()) {
                 System.out.println("        " + varName);
             } 
@@ -26,17 +28,21 @@ public class CompleteTable extends AbstractTable {
                 MethodTable tempTable2 = tempTable.methods.get(methodName);
                 System.out.println("      " + methodName);
 
-                //Print params of each method
+                //Print params of method
                 System.out.println("        Params:");
                 for (String paramsName: tempTable2.params.keySet()) {
                     System.out.println("            " + paramsName);
                 }
 
-                //Print local vars of each method
+                //Print local vars of method
                 System.out.println("        Local vars:");
                 for (String varName: tempTable2.locals.keySet()) {
-                    System.out.println("            " + varName);
+                    System.out.println("            " + tempTable2.locals.get(varName)  + "  " + varName);
                 }
+
+                //Print return type
+                System.out.println("        Return Type: " + tempTable2.returnType);
+
             } 
         }
     }

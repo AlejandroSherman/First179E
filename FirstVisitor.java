@@ -21,7 +21,7 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         String className = n.f1.f0.tokenImage;
 
         ClassTable classData = new ClassTable(className, "java.lang.Object", argTable.Global);
-        MethodTable methodData = new MethodTable("main", className, new TypeTable("main", className));
+        MethodTable methodData = new MethodTable("main", className, "IntegerType", new TypeTable("main", className));
         TypeTable type = new TypeTable("main", className, argTable.Global);
         methodData.addParam(n.f11.f0.tokenImage, type);
         classData.addMethod("main", methodData);
@@ -79,11 +79,11 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     // Called when visiting a variable of the program
     @Override
     public AbstractTable visit(VarDeclaration n, AbstractTable argTable) {
-        TypeTable type = new TypeTable(n.f0.f0.which, argTable.MethodName, argTable.ClassName, argTable.Global);
-
         //Identifier means its a class
-        //String dataType = n.f0.f0.choice.getClass().getSimpleName();
+        String dataType = n.f0.f0.choice.getClass().getSimpleName();
         String varName = n.f1.f0.tokenImage;
+        
+        TypeTable type = new TypeTable(n.f0.f0.which, argTable.MethodName, argTable.ClassName, dataType, argTable.Global);
 
         //System.out.println(argTable.ClassName + "->" + argTable.MethodName + "->" + varName);
 
@@ -95,8 +95,8 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         //This is a hacky way to handle this (not good)
         if(argTable.MethodName == null) ((ClassTable)argTable).addVar(varName, type); // its a class variable
         else {
-            String className = argTable.ClassName;
-            String methodName = argTable.MethodName;
+            //String className = argTable.ClassName;
+            //String methodName = argTable.MethodName;
             //System.out.println(className + " " + methodName);
             ClassTable classTable = (ClassTable)argTable;
             MethodTable methodTable = classTable.methods.get(argTable.MethodName);
@@ -123,7 +123,7 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         String ofClass = argTable.ClassName;
         //System.out.println("of class: " + ofClass);
 
-        MethodTable methodData = new MethodTable(methodName, ofClass, new TypeTable(methodName, ofClass));       
+        MethodTable methodData = new MethodTable(methodName, ofClass, ret_type, new TypeTable(methodName, ofClass));       
         ( (ClassTable)argTable ).addMethod(methodName, methodData);
         ( (ClassTable)argTable ).updateMethodName(methodName); //Updates the current method name (not permanent)
 

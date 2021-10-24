@@ -3,7 +3,7 @@ import java.util.HashMap;
 
 public class TypeTable extends AbstractTable{
     
-    public HashMap<String, String> vars; //name, type
+    public String dataType;
     
     //new TypeTable("main", classID)
     //new TypeTable("main", classID, argTable.Global);
@@ -25,7 +25,10 @@ public class TypeTable extends AbstractTable{
         ClassName = className;
     }
 
-    public void addVar(String name, String type){
-        vars.put(name, type);
+    TypeTable(Integer grammerChoice, String methodName, String className, String dType, SymbolTable Global){
+        MethodName = methodName;
+        ClassName = className;
+        dataType = dType;
     }
+
 }
