@@ -57,17 +57,85 @@ public class Translator { // converts java -> vapor
     }
 
     // Functions
+    public void addFunction(){
+        /*
+        Each line of the body of a function is one of:
+            - code label: Label:
+            - assignment: Location = Value
+            - branch: if Value goto CodeAddress
+            - goto: goto CodeAddress
+            - function call: call FunctionAddress (Args...)
+            - function return: ret Value
+            - call to built-in operation: OpName (Args...)
+         */
+    }
 
     // Assignment
+    // There are three distinct types of assignment: variable, memory load, memory store
+    public void addAssignment(){
+        /*
+        add variable:
+            Value is either an integer literal, a string literal, a variable name, or a label reference :Label.
+        */
+
+        /*
+        add memory load:
+            Memory operations always operate on 4-byte quantities and memory addresses must be 4-byte aligned.
+            A memory reference consists of a base address, which is either a label reference or a register.
+         */
+
+        /*
+        add memory store:
+            Memory operations always operate on 4-byte quantities and memory addresses must be 4-byte aligned.
+            A memory reference consists of a base address, which is either a label reference or a register.
+         */
+    }
 
     // Branch
+    // There are two variants of the branch instruction: if and if0
+    public void addBranch(){
+        /*
+        add if:
+            The if jumps to CodeLabel if Value is non-zero and falls through to the next instruction otherwise.
+         */
+
+        /*
+        add if0:
+            The if0 does the opposite, jumping to the specified label if Value is zero.
+         */
+    }
 
     // Goto
+    // The goto instruction is an unconditional jump to the specified target.
+    public void addGoto(){
+        /*
+        add Goto:
+            For this phase, goto can only refer to code labels.
+         */
+    }
 
     // Function Call
+    public void addFunctionCall(){
+        /*
+        add Function Call:
+
+            Var = call :FunctionLabel (Args...)
+                The assignment Var = is optional.
+                The arguements list Args... is a whitespace-separated list of value entries: integer literals, variables, or label references.
+                The return value of the function is stored in the Var variable.
+
+            Like goto, call can also use a function address loaded from a variable:
+                Var = call Var (Args...)
+         */
+    }
 
     // Function Return
-
+    public void addFunctionReturn(){
+        /*
+        The ret instruction returns from a function. 
+        The return value is optional.
+         */
+    }
 
 
     // *** BUILT-IN OPERATIONS ***
@@ -75,7 +143,7 @@ public class Translator { // converts java -> vapor
     // Arithmetic
 
     // Memory Allocation
-    
+
     // Display Output
 
 }
