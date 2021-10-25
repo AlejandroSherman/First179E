@@ -18,7 +18,15 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
 
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argTable){
-        ClassTable classTable = argTable.Global.classes.get(n.f1.f0.tokenImage);
+        ClassTable classTable = new ClassTable();
+        try{
+            classTable = argTable.Global.classes.get(n.f1.f0.tokenImage);
+        }
+        catch(Exception e) {
+            System.out.println("Type error");
+            System.exit(1);
+        }
+
         n.f0.accept(this, classTable);
         n.f1.accept(this, classTable);
         n.f2.accept(this, classTable);
@@ -48,10 +56,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     public AbstractTable visit(AssignmentStatement n, AbstractTable argTable){
         String leftSideName = n.f0.f0.tokenImage;
         isAssignLHS = true;
-
-        //System.out.println("Class: " + inClass + "    Method: " + inMethod);
-        //System.out.println("Left hand side var: " + leftSideName);
-
         ClassTable cTable = argTable.Global.classes.get(inClass);
         MethodTable mTable = cTable.methods.get(inMethod);
 
@@ -115,7 +119,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         n.f2.accept(this, argTable);
 
         //Checking RHS variable
-        //System.out.println("Checking the RHS");
         if (!lhsType.equals("Identifier")){ //Ignoring classes            
             try {
                 //System.out.println("Left hand side var: " + leftSideName);
@@ -128,7 +131,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
                 //Ignoring classes for now
                 else if(lhsType.equals("Identifier")){
                     //System.out.println(leftSideName + " is of type Class" );
-                    //leftSideName = rhsName;
                     isFound = true;
                 }
 
@@ -195,7 +197,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
                 System.exit(1);
             }
         }
-        //System.out.println('\n');
 
         n.f3.accept(this, argTable);
 
@@ -208,8 +209,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         ClassTable cTable = argTable.Global.classes.get(inClass);
         MethodTable mTable = cTable.methods.get(inMethod);
 
-        //System.out.println("called for method: " + inMethod);
-        
         AbstractTable _ret=null;
         n.f0.accept(this, argTable);
         n.f1.accept(this, argTable);
@@ -245,15 +244,10 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
             //Find type for indentifiers
             if(returningType.equals("Identifier") || returningType.equals("ThisExpression")){
                 //Returning a varaiable or a class
-                //System.out.println("Needed type      " + return_Type);
-                //System.out.println(returningType + " vs " + exRetType);
             }
             else {
-                //System.out.println(returningType + " vs " + exRetType);
-                //System.out.println("checking " + inMethod);
                 returningType = dictionary.getRealType(returningType);
                 exRetType = dictionary.getRealType(exRetType);
-                //System.out.println(returningType + " vs " + exRetType);
 
                 if(returningType!=null && exRetType!=null){
                     try{
@@ -267,7 +261,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
             }
         }
         if(isAssignRHS){
-            //System.out.println(n.f0.choice.getClass().getSimpleName());
             String rhsType = n.f0.choice.getClass().getSimpleName();
             if(rhsType.equals("IntegerLiteral")) rhsName = "Int";
             else if (rhsType.equals("TrueLiteral")) rhsName = "Bool";
@@ -286,8 +279,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         if(isReturning) {
             ClassTable cTable = argu.Global.classes.get(inClass);
             MethodTable mTable = cTable.methods.get(inMethod);
-
-            //System.out.println("returning var" + n.f0.tokenImage);
             String returnName = n.f0.tokenImage;
 
             //Ignore classes for now
@@ -304,7 +295,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
                     if(!returnType.equals(exRetType)) throw new Exception("ERROR - Invalid return type.");
                 }
                 catch(Exception e){
-                    //System.out.println(returnType + " != " + exRetType);
                     System.out.println("Type error");
                     System.exit(1);
                 }   
@@ -441,18 +431,12 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         }
         
         if(isAssignLHS) {
-            //System.out.println(lhsType + " vs " + n.f0.choice.getClass().getSimpleName());
-            //System.out.println("LHS name: " + n.f0.tokenImage);
-            //System.out.println("LHS ("+ n.f0.tokenImage+") in " + inClass + "->"+ inMethod);
             isAssignLHS = false;  
             isAssignRHS = true;          
         }
         else if(isAssignRHS){
-            //System.out.println("RHS name: " + n.f0.tokenImage);
             rhsName = n.f0.tokenImage;   
             if(rhsName.equals("i")) rhsName = "Int";
-            //if(rhsName.equals("val")) System.out.println("val found in " + inClass + "->"+ inMethod);
-            //System.out.println("RHS ("+ n.f0.tokenImage+") in " + inClass + "->"+ inMethod);
             isAssignRHS = false;
         }
 
@@ -468,13 +452,11 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         n.f0.accept(this, argu); //First expression (the array)
         isArray = false;
 
-        //System.out.println(arrayType);
         arrayType = dictionary.getRealType(arrayType);
         try{
             if(!arrayType.equals("Array")) throw new Exception("ERROR - accessing a non array.");
         }
         catch(Exception e){
-            //System.out.println("Array!=" + arrayType);
             System.out.println("Type error");
             System.exit(1);
         }
@@ -484,8 +466,6 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         isIndex = true;
         n.f2.accept(this, argu); //Second expression (the index)
         isIndex = false;
-
-        //System.out.println(indexType);
 
         n.f3.accept(this, argu);
         return _ret;
@@ -509,4 +489,3 @@ public class SecondVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     }
 
 }  
-

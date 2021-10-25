@@ -3,7 +3,6 @@ import visitor.GJDepthFirst;
 
 public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
 
-    //OKAY
     //gets a global table to store classes
     @Override
     public AbstractTable visit(Goal n, AbstractTable argTable){
@@ -13,7 +12,6 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         return null;
     }
 
-    //OKAY
     // Called when visiting the program's main class
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argTable) {
@@ -51,7 +49,6 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         return classData;
     }
 
-    //OKAY
     // Called when visiting a class of the program
     @Override
     public AbstractTable visit(ClassDeclaration n, AbstractTable argTable) {
@@ -59,8 +56,6 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         //All the classes extends from java.lang.Object
         String classID = n.f1.f0.tokenImage;
         ClassTable classData = new ClassTable(classID, "java.lang.Object", argTable.Global);
-
-        //System.out.println("classID: "+ classID);
 
         n.f0.accept(this, classData);
         n.f1.accept(this, classData);
@@ -75,7 +70,6 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         return classData;
     }
 
-    //OKAY
     // Called when visiting a variable of the program
     @Override
     public AbstractTable visit(VarDeclaration n, AbstractTable argTable) {
@@ -85,26 +79,16 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         
         TypeTable type = new TypeTable(n.f0.f0.which, argTable.MethodName, argTable.ClassName, dataType, argTable.Global);
 
-        //System.out.println(argTable.ClassName + "->" + argTable.MethodName + "->" + varName);
-
         n.f0.accept(this, type);
 
         //To check whether this variable is a method level variable
-        //System.out.println(argTable.getClass().getSimpleName()); 
-
         //This is a hacky way to handle this (not good)
         if(argTable.MethodName == null) ((ClassTable)argTable).addVar(varName, type); // its a class variable
         else {
-            //String className = argTable.ClassName;
-            //String methodName = argTable.MethodName;
-            //System.out.println(className + " " + methodName);
             ClassTable classTable = (ClassTable)argTable;
             MethodTable methodTable = classTable.methods.get(argTable.MethodName);
             methodTable.addLocal(varName, type);
         }
-
-        //if(argTable instanceof MethodTable) ((MethodTable)argTable).addLocal(varName, type);
-        //else if(argTable instanceof ClassTable) ((ClassTable)argTable).addVar(varName, type);
 
         n.f1.accept(this, argTable);
         n.f2.accept(this, argTable);
@@ -121,7 +105,6 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         String methodName = n.f2.f0.tokenImage;
         // get the method's class name
         String ofClass = argTable.ClassName;
-        //System.out.println("of class: " + ofClass);
 
         MethodTable methodData = new MethodTable(methodName, ofClass, ret_type, new TypeTable(methodName, ofClass));       
         ( (ClassTable)argTable ).addMethod(methodName, methodData);

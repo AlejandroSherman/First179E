@@ -1,15 +1,9 @@
+//Cody Steimle (SID: 862137374)
+//Alejandro Sherman (SID: 862062898)
+//Steven Carrasco (SID: 862060283)
+
 import syntaxtree.Node;
 import java.io.InputStream;
-
-
-//TO DO
-
-//First Pass
-//Still need properly store types for class declarations
-
-//Second Pass
-//Second pass / type checking still needs to happen
-
 
 public class Typecheck {
 
@@ -29,8 +23,9 @@ public class Typecheck {
         }
         catch(Exception e) {
             System.out.println("Type error");
-            System.out.println(e.getCause());
-            e.printStackTrace();
+            System.exit(1);
+            //System.out.println(e.getCause());
+            //e.printStackTrace();
         }   
     }
 

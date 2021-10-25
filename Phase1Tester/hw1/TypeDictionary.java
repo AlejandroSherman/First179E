@@ -12,7 +12,6 @@ public class TypeDictionary {
         typeMap.put("FalseLiteral", "Boolean");
         typeMap.put("ArrayAllocationExpression", "Array");
         typeMap.put("ArrayType", "Array");
-
     }
 
     public String getRealType(String dataType){
