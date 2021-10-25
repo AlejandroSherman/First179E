@@ -132,7 +132,7 @@ public class Translator { // converts java -> vapor
     // Function Return
     public void addFunctionReturn(){
         /*
-        The ret instruction returns from a function. 
+        The ret instruction returns from a function.
         The return value is optional.
          */
     }
@@ -141,9 +141,47 @@ public class Translator { // converts java -> vapor
     // *** BUILT-IN OPERATIONS ***
 
     // Arithmetic
+    public void arithmetic(){
+        /*
+        Basic arithmetic:
+            Add, Sub, Mul, Div, Rem, MulS, DivS, RemS, ShiftL, ShiftR, ShiftLA
+            The "-S" variants operate on signed integers.
+             a = Add(a b)
+
+        Comparison:
+            Eq, Ne, Lt, Le, LtS, LeS
+            The "-S" variants operate on signed integers.
+
+        Bitwise boolean operators:
+            And, Or, Not
+         */
+    }
 
     // Memory Allocation
+    public void memAlloc(){
+        /*
+        HeapAlloc:
+            take an integer - the number of bytes of memory to allocate.
+            Returns the address of newly-allocated memory.
 
+        HeapAllocZ:
+            The "-Z" variant initializes the memory to all zero.
+         */
+    }
+    
     // Display Output
+    public void output(){
+        /* These do not return a value.
+        
+        PrintInt:
+            print out unsigned integers.
+            
+        PrintIntS:
+            print out signed integers.
+            
+        PrintString:
+            print out strings. 
 
+         */
+    }
 }
