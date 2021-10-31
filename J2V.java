@@ -5,9 +5,31 @@
 import syntaxtree.Node;
 import java.io.InputStream;
 
-public class Typecheck {
+public class J2V {
 
     public static void main(String [] args) throws Exception {
+       
+        InputStream fileStream = System.in;
+        new MiniJavaParser(fileStream);
+        FirstVisitor first_visitor = new FirstVisitor();
+        CompleteTable completeTable = new CompleteTable(); // Global Symbol Table. Map for classes and map for methods.
+        MakeVTables makeTables = new MakeVTables();
+        try {
+            Node root = MiniJavaParser.Goal();   // does the parsing.
+            //root.accept(first_visitor, completeTable);  // fills global symbol table
+            root.accept(makeTables, completeTable);  // fills all tables
+            //completeTable.prntTable();
+            completeTable.GlobalVTables.printTables();
+            System.out.println("success");
+        }
+        catch(Exception e) {
+            System.out.println("error");
+            System.exit(1);
+        }   
+
+
+       //Below is Phase 1 code
+        /*
         //read in file via <
         InputStream fileStream = System.in;
         new MiniJavaParser(fileStream);
@@ -24,9 +46,8 @@ public class Typecheck {
         catch(Exception e) {
             System.out.println("Type error");
             System.exit(1);
-            //System.out.println(e.getCause());
-            //e.printStackTrace();
         }   
+        */
     }
 
 }

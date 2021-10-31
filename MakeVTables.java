@@ -1,7 +1,9 @@
+//First pass, create and fill all the vtables
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
-public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
+public class MakeVTables extends GJDepthFirst<AbstractTable,AbstractTable>{
+    Integer classIndex = 0;
 
     @Override
     public AbstractTable visit(Goal n, AbstractTable argu){
@@ -56,6 +58,11 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         argu.Global.CurrentClass = tempClass;
         argu.Global.addClass(className, tempClass);
 
+        //Vapor Stuff (Missing extended classes)
+        VTable tempTable = new VTable(className, classIndex);
+        argu.GlobalVTables.vtables.put(className, tempTable);
+        classIndex++;
+
         AbstractTable _ret=null;
         n.f0.accept(this, argu); // f0 -> "class"
         n.f1.accept(this, argu); // f1 -> Identifier()
@@ -95,6 +102,10 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         OneMethod tempMethod = new OneMethod(methodName, returnType, argu.Global.CurrentClass.className);
         argu.Global.CurrentMethod = tempMethod;
         argu.Global.CurrentClass.addMethod(methodName, tempMethod);
+
+        //Vapor Stuff
+        VTable tempTable = argu.GlobalVTables.vtables.get(argu.Global.CurrentClass.className);
+        tempTable.addMethod(methodName);
 
         AbstractTable _ret=null;
         n.f0.accept(this, argu); // f0 -> "public"
@@ -163,5 +174,5 @@ public class FirstVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
         n.f6.accept(this, argu); // f6 -> ( MethodDeclaration() )*
         n.f7.accept(this, argu); // f7 -> "}"
         return _ret;
-    }   
+    }
 }
