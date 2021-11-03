@@ -1,0 +1,139 @@
+import syntaxtree.*;
+import visitor.GJDepthFirst;
+
+import java.util.LinkedList;
+
+public class TranslationVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
+
+    @Override
+    public AbstractTable visit(MainClass n, AbstractTable argu) {
+
+        System.out.println("func Main()");
+
+        LinkedList<String> main = new LinkedList<>();
+        main.add("func Main()");
+        AbstractTable i = new AbstractTable();
+        for(Node statement: n.f15.nodes){
+            //System.out.println(statement.accept(this, argu));//
+            i = statement.accept(this,argu);
+        }
+
+
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu); // f0 -> "class"
+        n.f1.accept(this, argu); // f1 -> Identifier()
+        n.f2.accept(this, argu); // f2 -> "{"
+        n.f3.accept(this, argu); // f3 -> "public"
+        n.f4.accept(this, argu); // f4 -> "static"
+        n.f5.accept(this, argu); // f5 -> "void"
+        n.f6.accept(this, argu); // f6 -> "main"
+        n.f7.accept(this, argu); // f7 -> "("
+        n.f8.accept(this, argu); // f8 -> "String"
+        n.f9.accept(this, argu); // f9 -> "["
+        n.f10.accept(this, argu); // f10 -> "]"
+        n.f11.accept(this, argu); // f11 -> Identifier()
+        n.f12.accept(this, argu); // f12 -> ")"
+        n.f13.accept(this, argu); // f13 -> "{"
+        n.f14.accept(this, argu); // f14 -> ( VarDeclaration() )*
+
+        n.f15.accept(this, argu); // f15 -> ( Statement() )*
+        
+        n.f16.accept(this, argu); // f16 -> "}"
+        n.f17.accept(this, argu); // f17 -> "}"
+        
+        System.out.println("    ret");
+        return _ret;
+    }
+
+    @Override
+    public AbstractTable visit(VarDeclaration n, AbstractTable argu) {
+        String varType = n.f0.f0.choice.getClass().getSimpleName();
+        varType = argu.dictionary.getRealType(varType);
+        String varName = n.f1.f0.tokenImage;
+
+        argu.Global.CurrentVar.varName = varName; // test
+        //System.out.println("    " + varType + " "  + varName );
+
+        AbstractTable _ret=null;
+        n.f0.accept(this,argu);
+        n.f1.accept(this,argu);
+        n.f2.accept(this,argu);
+        return _ret;
+    }
+
+    @Override
+    public AbstractTable visit(IntegerLiteral n, AbstractTable argu) {
+        /////////////////// test
+        String varName = argu.Global.CurrentVar.varName;
+        String varValue = n.f0.tokenImage;
+
+        //System.out.print(varValue);
+
+        n.f0.accept(this, argu);
+
+        return null;
+    }
+
+    @Override
+    public AbstractTable visit(MethodDeclaration n, AbstractTable argu){
+        System.out.println("func " + n.f2.f0.tokenImage + "()");
+
+        n.f0.accept(this,argu);
+        n.f1.accept(this,argu);
+        n.f2.accept(this,argu);
+        n.f3.accept(this,argu);
+        n.f4.accept(this,argu);
+        n.f5.accept(this,argu);
+        n.f6.accept(this,argu);
+        n.f7.accept(this,argu);
+        n.f8.accept(this,argu);
+        n.f9.accept(this,argu);
+        n.f10.accept(this,argu);
+        n.f11.accept(this,argu);
+        n.f12.accept(this,argu);
+
+        System.out.println("    ret");
+        return null;
+    }
+
+    @Override
+    public AbstractTable visit(IfStatement n, AbstractTable argu) {
+        n.f0.accept(this,argu);
+        n.f1.accept(this,argu);
+        System.out.print("    t.0 = ");
+        n.f2.accept(this,argu);
+        n.f3.accept(this,argu);
+
+        System.out.println("    if0 t.0 goto :if1_else");
+            // do something inside if statement
+            n.f4.accept(this,argu);
+        System.out.println("        goto :if1_end");
+        n.f5.accept(this,argu);
+        System.out.println("    if1_else:");
+            // do something inside if-else statement
+            n.f6.accept(this,argu);
+        System.out.println("    if1_end:");
+        return null;
+    }
+
+    @Override
+    public AbstractTable visit(CompareExpression n, AbstractTable argu) {
+        System.out.print("LtS(num 1");
+
+        n.f0.accept(this,argu);
+        n.f1.accept(this,argu);
+        n.f2.accept(this,argu); // can print 1 from here but also prints every IntegerLiteral
+        System.out.println(")");
+        return null;
+    }
+
+    @Override
+    public AbstractTable visit(AssignmentStatement n, AbstractTable argu) {
+        String id = n.f0.f0.tokenImage;
+        n.f0.accept(this,argu);
+        n.f1.accept(this,argu);
+        System.out.println("        " + id + " = ");
+        n.f2.accept(this,argu);
+        return null;
+    }
+}
