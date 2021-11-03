@@ -10,13 +10,6 @@ public class TranslationVisitor extends GJDepthFirst<AbstractTable,AbstractTable
 
         System.out.println("func Main()");
 
-        LinkedList<String> main = new LinkedList<>();
-        main.add("func Main()");
-        AbstractTable i = new AbstractTable();
-        for(Node statement: n.f15.nodes){
-            //System.out.println(statement.accept(this, argu));//
-            i = statement.accept(this,argu);
-        }
 
 
         AbstractTable _ret=null;
