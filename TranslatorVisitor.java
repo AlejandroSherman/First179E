@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 
 
-public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
+public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
     public static int tempCounter = 0;
     public static int ifCounter = 0;
     public static int ifLabelCounter = 0;
@@ -16,7 +16,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public String memAlloc(VTable vtable){
         int recordSize = vtable.records.size();
         int allocSize = recordSize * 4 + 4;
-        String r = "HeapAllocZ("+allocSize+")";
+        String r = "HeapAllocZ(" + allocSize + ")";
 
         return r;
     }
@@ -107,8 +107,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         return null;
     }
 
+    public static boolean isPrimaryExpression = false;
     @Override
     public AbstractTable visit(MethodDeclaration n, AbstractTable argu){
+
         System.out.println("\nfunc " + n.f2.f0.tokenImage + "()");
         tabCounter++;
 
@@ -122,12 +124,13 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f7.accept(this,argu);
         n.f8.accept(this,argu);
         n.f9.accept(this,argu);
+        System.out.print(tab() + "ret ");
+        isPrimaryExpression = true;
         n.f10.accept(this,argu);
         n.f11.accept(this,argu);
         n.f12.accept(this,argu);
-
-        System.out.println(tab() + "ret");
         tabCounter = 0;
+
         return null;
     }
 
@@ -222,11 +225,16 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         return null;
     }
 
+    public static boolean isPrintStatement = false;
     @Override
     public AbstractTable visit(PrintStatement n, AbstractTable argu) {
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         //System.out.println("    "+n.f2.getClass().getSimpleName());
+        if(isPrintStatement) {
+            System.out.println(tab() + "PrintIntS()");
+        }
+        isPrintStatement = true;
         n.f2.accept(this,argu);
         n.f3.accept(this,argu);
         n.f4.accept(this,argu);
@@ -237,6 +245,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public AbstractTable visit(Expression n, AbstractTable argu) {
         //System.out.println(n.f0.choice.getClass().getSimpleName());
         n.f0.accept(this,argu);
+
         return null;
     }
 
@@ -262,8 +271,15 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             tabCounter++;
             System.out.println(tab() + "t." + tempCounter + " = " + memAlloc(vtable));
             System.out.println(tab() + "[t." + tempCounter + "] = :vmt_" + n.f1.f0.tokenImage);
-            isNew = false;
+
+            //copy-pasted
+            System.out.println(tab() + "if t.0 goto :null1\n" +
+                    "    Error(\"null pointer\")\n" +
+                    "  null1:");
+
+
             tabCounter--;
+            isNew = false;
         }
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
@@ -276,6 +292,9 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(PrimaryExpression n, AbstractTable argu) {
         //System.out.println(n.f0.choice.getClass().getSimpleName());
+        if(isPrimaryExpression){
+            //System.out.println(n.f0.choice.getClass().getSimpleName());
+        }
         n.f0.accept(this,argu);
 
         return null;
@@ -284,6 +303,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(Identifier n, AbstractTable argu) {
         n.f0.accept(this,argu);
+        if(isPrimaryExpression) {
+            System.out.println(n.f0.tokenImage);
+            isPrimaryExpression = false;
+        }
         return null;
     }
 }
