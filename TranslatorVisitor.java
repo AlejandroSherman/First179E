@@ -325,7 +325,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
         return null;
     }
 
-    visit
+    // visit equals
 
     /********************
      *  DISPLAY OUTPUT  *
