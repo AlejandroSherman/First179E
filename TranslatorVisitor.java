@@ -94,7 +94,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f16.accept(this, argu); // f16 -> "}"
         n.f17.accept(this, argu); // f17 -> "}"
 
-        tempFunc.code += "   ret\n";
+        tempFunc.code += tab() + "ret\n";
 
         System.out.println(tab() + "ret");
         tabCounter = 0;
@@ -268,11 +268,11 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(IntegerLiteral n, AbstractTable argu) {
-        /////////////////// test
-        //String varName = argu.Global.CurrentVar.varName;
+        OneFunction tempFunc = argu.Global.CurrentFunc;
 
         String varValue = n.f0.tokenImage;
         if(isAssign) {
+            tempFunc.code += varValue + "\n";
             System.out.println(varValue);
             isAssign = false;
         }
@@ -290,32 +290,36 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
-        tempFunc.code += "   t.0 = ";
+        tempFunc.code += tab() + "t." + tempCounter + " = ";
         System.out.print(tab() + "t." + tempCounter + " = ");
         n.f2.accept(this,argu);
         n.f3.accept(this,argu);
 
         // TODO get unique labels
-        tempFunc.code += "   if0 t.0 goto :if1_else\n";
-        System.out.println(tab() + "if" + ifCounter++ + " t." + tempCounter++ + " goto :if" + ++ifLabelCounter + "_else");
+        ++ifLabelCounter;
+        tempFunc.code += tab() + "if" + ifCounter + " t." + tempCounter + " goto :if" + ifLabelCounter + "_else\n";
+        System.out.println(tab() + "if" + ifCounter + " t." + tempCounter + " goto :if" + ifLabelCounter + "_else");
+        ifCounter++;
+        tempCounter++;
         // TODO do something inside if statement
         tabCounter++;
         n.f4.accept(this,argu);
         if(isAssign){ // TODO temp fix for assignments
-        System.out.println("THERE WAS NOTHING ASSIGNED!");
-        isAssign = false;
+            tempFunc.code += "THERE WAS NOTHING ASSIGNED!\n";
+            System.out.println("THERE WAS NOTHING ASSIGNED!");
+            isAssign = false;
         }
-        tempFunc.code += "      goto :if1_end\n";
+        tempFunc.code += tab() + "goto :if" + ifCounter + "_end\n";
         System.out.println(tab() + "goto :if" + ifCounter + "_end");
         tabCounter--;
         n.f5.accept(this,argu);
-        tempFunc.code += "   if1_else:\n";
+        tempFunc.code += tab() + "if" + ifLabelCounter + "_else:\n";
         System.out.println(tab() + "if" + ifLabelCounter + "_else:");
         // TODO do something inside if-else statement
         tabCounter++;
         n.f6.accept(this,argu);
         tabCounter--;
-        tempFunc.code += "   if1_end:\n";
+        tempFunc.code += tab() + "if1_end:\n";
         System.out.println(tab() + "if" + ifCounter + "_end:");
         ifCounter = 0;
         tempCounter = 0;
@@ -324,18 +328,24 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(WhileStatement n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
         //TODO unique labels
         //TODO fill in loop bodies
+        tempFunc.code += tab() + "goto :end\n";
         System.out.println(tab() + "goto :end");
+        tempFunc.code += tab() + "begin:\n";
         System.out.println(tab() + "begin:");
         tabCounter++;
-        System.out.println(tab() +
-                "<inside begin>"); //TODO fill loop begin
+
+        tempFunc.code += tab() + "<inside begin>\n";
+        System.out.println(tab() + "<inside begin>"); //TODO fill loop begin
         tabCounter--;
+        tempFunc.code += tab() + "end:\n";
         System.out.println(tab() + "end:");
         tabCounter++;
-        System.out.println(tab() +
-                "<inside end>"); //TODO fill loop end
+        tempFunc.code += tab() + "<inside end>\n";
+        System.out.println(tab() + "<inside end>"); //TODO fill loop end
         System.out.println(tab() + "goto :begin");
         tabCounter--;
 
@@ -367,7 +377,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         isAssign = true;
-        tempFunc.code += "      " + id + " = \n"; // I think we can drop "\n"
+        tempFunc.code += tab() + id + " = "; // I think we can drop "\n"
         System.out.print(tab() + id + " = ");
         n.f2.accept(this,argu);
         return null;
@@ -398,13 +408,19 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(AllocationExpression n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
         n.f0.accept(this, argu);
         VTable vtable = argu.GlobalVTables.vtables.get(argu.Global.CurrentClass.className);
         if(isNew) {
             //tabCounter++;
+            tempFunc.code += tab() + "t." + tempCounter + " = " + memAlloc(vtable) + "\n";
             System.out.println(tab() + "t." + tempCounter + " = " + memAlloc(vtable));
+            tempFunc.code += tab() + "[t." + tempCounter + "] = :vmt_" + n.f1.f0.tokenImage + "\n";
             System.out.println(tab() + "[t." + tempCounter + "] = :vmt_" + n.f1.f0.tokenImage);
-            error(); // error checking (null ptr, etc.)
+            String err = error();
+            tempFunc.code += error() + "\n";
+            System.out.println(error()); // error checking (null ptr, etc.)
             //tabCounter--;
             isNew = false;
         }
@@ -430,7 +446,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(PlusExpression n, AbstractTable argu) {
-        System.out.println("Sub(num " + "t." + tempCounter + ")");
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
+        tempFunc.code += "Add(num " + "t." + tempCounter + ")\n";
+        System.out.println("Add(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         //n.f2.accept(this,argu); skip print IntegerLiteral value
@@ -439,6 +458,9 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(MinusExpression n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
+        tempFunc.code += "Sub(num " + "t." + tempCounter + ")\n";
         System.out.println("Sub(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
@@ -448,7 +470,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(TimesExpression n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
         isAssign = false;
+        tempFunc.code += "MulS(num " + "t." + tempCounter + ")\n";
         System.out.println("MulS(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
@@ -471,7 +496,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             System.out.println("LtS(num 1)"); // TODO get variable and IntegerLiteral
         }
         else{
-            tempFunc.code += "Lt(num 1)";
+            tempFunc.code += "Lt(num 1)\n";
             System.out.println("Lt(num 1)"); // TODO get variable and IntegerLiteral
         }
 
@@ -491,10 +516,13 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(PrintStatement n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         //System.out.println("    "+n.f2.getClass().getSimpleName());
         if(isPrintStatement) {
+            tempFunc.code += tab() + "PrintIntS()\n";
             System.out.println(tab() + "PrintIntS()"); // TODO get argument
         }
         isPrintStatement = true;
@@ -518,12 +546,13 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
      *  ERROR  *
      ***********/
 
-    public void error(){
+    public String error(){
         //TODO unique label names
         //TODO message based on error
-        System.out.println(tab() + "if t.0 goto :null1\n" +
-                tab() + "  Error(\"null pointer\")\n" +
-                "  null1:");
+        String err = tab() + "if t.0 goto :null1\n" +
+                     tab() + tab() + "Error(\"null pointer\")\n" +
+                     tab() + "null1:";
+        return err;
     }
 
 }
