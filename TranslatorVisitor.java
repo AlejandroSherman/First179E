@@ -185,7 +185,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f11.accept(this, argu); // f11 -> ";"
         n.f12.accept(this, argu); // f12 -> "}"
 
-        tempFunc.code += "   ret\n";
+        tempFunc.code += tab() + "ret\n";
         tabCounter = 0;
         return null;
     }
