@@ -5,7 +5,6 @@ public class SymbolTable extends AbstractTable {
     public OneClass CurrentClass;
     public OneMethod CurrentMethod;
     public OneVar CurrentVar;
-    public OneFunction CurrentFunc;
     public String classOrmethod;
 
     public SymbolTable(){

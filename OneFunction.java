@@ -8,9 +8,6 @@ public class OneFunction {
     public Integer index;
     public Integer classIndex;
 
-    public OneFunction(){
-    }
-
     public OneFunction(String n, Integer indx, VTable tempTable){
         name = n;
         ofClass = tempTable.className;

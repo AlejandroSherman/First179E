@@ -11,16 +11,17 @@ public class J2V {
        
         InputStream fileStream = System.in;
         new MiniJavaParser(fileStream);
-        //FirstVisitor first_visitor = new FirstVisitor();
-        CompleteTable completeTable = new CompleteTable(); // Global Symbol Table. Map for classes and map for methods.
-        TranslatorVisitor makeTables = new TranslatorVisitor();
+        CompleteTable completeTable = new CompleteTable();
+        FirstVisitor firstVisitor = new FirstVisitor(); // Global Symbol Table. Map for classes and map for methods.
+        VTableVisitor vtableVisitor = new VTableVisitor();
+        TranslatorVisitor translator = new TranslatorVisitor();
         try {
             Node root = MiniJavaParser.Goal();   // does the parsing.
-            //root.accept(first_visitor, completeTable);  // fills global symbol table
-            root.accept(makeTables, completeTable);  // fills all tables
+            root.accept(firstVisitor, completeTable);  // fills symbol table
+            root.accept(vtableVisitor, completeTable);  // fills vtables
+            root.accept(translator, completeTable);  // fills vtables
             completeTable.GlobalVTables.printTables();
             completeTable.GlobalCodeGen.printFuncs(completeTable.GlobalVTables.vtables.size());
-            //completeTable.prntTable();
             System.out.println("success");
         }
         catch(Exception e) {

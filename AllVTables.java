@@ -1,6 +1,8 @@
 import java.util.HashMap;
 
 public class AllVTables {
+    public OneFunction CurrentFunc;
+    public VTable CurrentVTable;
     public HashMap<String, VTable> vtables;
 
     public AllVTables(){
