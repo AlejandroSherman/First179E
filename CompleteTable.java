@@ -3,10 +3,7 @@ public class CompleteTable extends AbstractTable {
     CompleteTable(){
         Global = new SymbolTable();
         GlobalVTables = new AllVTables();
-<<<<<<< Updated upstream
-=======
         GlobalCodeGen = new VaporGen();
->>>>>>> Stashed changes
     }
 
     //For testing, prints out tables / structure
