@@ -16,6 +16,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     int tabCounter = 0;
     LinkedList<String> temps = new LinkedList<String>();
     LinkedList<String> statements = new LinkedList<String>();
+    boolean isPrintStatement = true;
+    boolean isPrimaryExpression = false;
+    boolean isAssign = false;
+    boolean isNew = true;
 
     /**********************
      *  HELPER FUNCTIONS  *
@@ -140,7 +144,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         return _ret;
     }
 
-    public static boolean isPrimaryExpression = false;
     @Override
     public AbstractTable visit(MethodDeclaration n, AbstractTable argu){
         argu.Global.classOrmethod = "method";
@@ -159,7 +162,8 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         funcIndex++;
         argu.Global.CurrentFunc = tempFunc;
 
-        System.out.println("\nfunc " + n.f2.f0.tokenImage + "()");
+        String tempName = argu.GlobalCodeGen.functions.get(methodName).ofClass + "." + n.f2.f0.tokenImage;
+        System.out.println("\nfunc " + tempName + "()");
         tabCounter++;
 
         n.f0.accept(this, argu); // f0 -> "public"
@@ -253,7 +257,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
         if(isPrimaryExpression) {
-            System.out.println(n.f0.tokenImage);
+            //System.out.println(n.f0.tokenImage);
             isPrimaryExpression = false;
         }
         return null;
@@ -348,11 +352,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public AbstractTable visit(Statement n, AbstractTable argu) {
         //statements.add(n.f0.choice.getClass().getSimpleName());
         //System.out.println(statements.getLast());
-        n.f0.accept(this,argu);
+        n.f0.accept(this, argu);
         return null;
     }
 
-    public static boolean isAssign = false;
     @Override
     public AbstractTable visit(AssignmentStatement n, AbstractTable argu) {
         OneFunction tempFunc = argu.Global.CurrentFunc;
@@ -390,17 +393,16 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         return null;
     }
 
-    public static Boolean isNew = true;
     @Override
     public AbstractTable visit(AllocationExpression n, AbstractTable argu) {
         n.f0.accept(this, argu);
         VTable vtable = argu.GlobalVTables.vtables.get(argu.Global.CurrentClass.className);
         if(isNew) {
-            tabCounter++;
+            //tabCounter++;
             System.out.println(tab() + "t." + tempCounter + " = " + memAlloc(vtable));
             System.out.println(tab() + "[t." + tempCounter + "] = :vmt_" + n.f1.f0.tokenImage);
             error(); // error checking (null ptr, etc.)
-            tabCounter--;
+            //tabCounter--;
             isNew = false;
         }
         n.f1.accept(this, argu);
@@ -425,7 +427,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(PlusExpression n, AbstractTable argu) {
-        System.out.println("Sub(num " +  "t." + tempCounter + ")");
+        System.out.println("Sub(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         //n.f2.accept(this,argu); skip print IntegerLiteral value
@@ -434,7 +436,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(MinusExpression n, AbstractTable argu) {
-        System.out.println("Sub(num " +  "t." + tempCounter + ")");
+        System.out.println("Sub(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         //n.f2.accept(this,argu); skip print IntegerLiteral value
@@ -444,7 +446,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(TimesExpression n, AbstractTable argu) {
         isAssign = false;
-        System.out.println("MulS(num " +  "t." + tempCounter + ")");
+        System.out.println("MulS(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         //n.f2.accept(this,argu); skip print IntegerLiteral value
@@ -462,7 +464,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         isAssign = false;
         boolean signedInt = true; // TODO get type from symbol table and check if signed int or not
         if(signedInt){
-            tempFunc.code += "LtS(num 1)";
+            tempFunc.code += "LtS(num 1)\n";
             System.out.println("LtS(num 1)"); // TODO get variable and IntegerLiteral
         }
         else{
@@ -484,7 +486,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
      *  DISPLAY OUTPUT  *
      ********************/
 
-    public static boolean isPrintStatement = false;
     @Override
     public AbstractTable visit(PrintStatement n, AbstractTable argu) {
         n.f0.accept(this,argu);
