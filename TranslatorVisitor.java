@@ -90,7 +90,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         //System.out.println(n.f15.accept(this,argu));
         n.f15.accept(this, argu); // f15 -> ( Statement() )*
-        
+
         n.f16.accept(this, argu); // f16 -> "}"
         n.f17.accept(this, argu); // f17 -> "}"
 
@@ -229,7 +229,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         //Vapor Stuff
         argu.Global.CurrentFunc.params.add(" "+ varName);
-
         System.out.print("this " + varName);
 
         AbstractTable _ret=null;
@@ -260,7 +259,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
         if(isPrimaryExpression) {
-            //System.out.println(n.f0.tokenImage);
+            System.out.println(n.f0.tokenImage);
             isPrimaryExpression = false;
         }
         return null;
@@ -518,17 +517,18 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public AbstractTable visit(PrintStatement n, AbstractTable argu) {
         OneFunction tempFunc = argu.Global.CurrentFunc;
 
-        n.f0.accept(this,argu);
-        n.f1.accept(this,argu);
+        n.f0.accept(this,argu); // f0 -> "System.out.println"
+        n.f1.accept(this,argu); // f1 -> "("
         //System.out.println("    "+n.f2.getClass().getSimpleName());
+
+        n.f2.accept(this,argu); // f2 -> Expression()
         if(isPrintStatement) {
             tempFunc.code += tab() + "PrintIntS()\n";
             System.out.println(tab() + "PrintIntS()"); // TODO get argument
         }
         isPrintStatement = true;
-        n.f2.accept(this,argu);
-        n.f3.accept(this,argu);
-        n.f4.accept(this,argu);
+        n.f3.accept(this,argu); // f3 -> ")"
+        n.f4.accept(this,argu); // f4 -> ";"
         return null;
     }
 
