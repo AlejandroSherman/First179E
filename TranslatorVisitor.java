@@ -178,6 +178,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f8.accept(this, argu); // f8 -> ( Statement() )*
         n.f9.accept(this, argu); // f9 -> "return"
 
+        tempFunc.code += tab() + "ret ";
         System.out.print(tab() + "ret ");
         isPrimaryExpression = true;
 
@@ -185,7 +186,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f11.accept(this, argu); // f11 -> ";"
         n.f12.accept(this, argu); // f12 -> "}"
 
-        tempFunc.code += tab() + "ret\n";
+
         tabCounter = 0;
         return null;
     }
@@ -250,6 +251,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(Identifier n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
         if( argu.Global.CurrentVar.varType.equals("(Class)") ){
             argu.Global.CurrentVar.varType = n.f0.tokenImage;
         }
@@ -259,6 +261,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
         if(isPrimaryExpression) {
+            tempFunc.code += n.f0.tokenImage + "\n";
             System.out.println(n.f0.tokenImage);
             isPrimaryExpression = false;
         }
