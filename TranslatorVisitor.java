@@ -163,7 +163,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         argu.Global.CurrentFunc = tempFunc;
 
         String tempName = argu.GlobalCodeGen.functions.get(methodName).ofClass + "." + n.f2.f0.tokenImage;
-        System.out.println("\nfunc " + tempName + "()");
+        System.out.print("\nfunc " + tempName + "(");
         tabCounter++;
 
         n.f0.accept(this, argu); // f0 -> "public"
@@ -171,6 +171,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f2.accept(this, argu); // f2 -> Identifier()
         n.f3.accept(this, argu); // f3 -> "("
         n.f4.accept(this, argu); // f4 -> ( FormalParameterList() )?
+        System.out.println(")");
         n.f5.accept(this, argu); // f5 -> ")"
         n.f6.accept(this, argu); // f6 -> "{"
         n.f7.accept(this, argu); // f7 -> ( VarDeclaration() )*
@@ -228,6 +229,8 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         //Vapor Stuff
         argu.Global.CurrentFunc.params.add(" "+ varName);
+
+        System.out.print("this " + varName);
 
         AbstractTable _ret=null;
         n.f0.accept(this, argu); // f0 -> Type()
