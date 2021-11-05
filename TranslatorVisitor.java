@@ -3,7 +3,7 @@ import visitor.GJDepthFirst;
 
 import java.util.LinkedList;
 
-public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
+public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     /*******************
      *  CLASS GLOBALS  *
      *******************/
