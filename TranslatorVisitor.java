@@ -7,7 +7,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
     /*******************
      *  CLASS GLOBALS  *
      *******************/
-    
+
     public static int tempCounter = 0;
     public static int ifCounter = 0;
     public static int ifLabelCounter = 0;
@@ -160,7 +160,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
     /******************
      *  CONTROL FLOW  *
      ******************/
-    
+
     @Override
     public AbstractTable visit(IfStatement n, AbstractTable argu) {
         n.f0.accept(this,argu);
@@ -173,7 +173,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
             // do something inside if statement
             tabCounter++;
             n.f4.accept(this,argu);
-        if(isAssign){
+        if(isAssign){ // temp fix for assignments
             System.out.println("THERE WAS NOTHING ASSIGNED!");
             isAssign = false;
         }
@@ -188,6 +188,27 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
         System.out.println(tab() + "if" + ifCounter + "_end:");
         ifCounter = 0;
         tempCounter = 0;
+        return null;
+    }
+
+    @Override
+    public AbstractTable visit(WhileStatement n, AbstractTable argu) {
+        System.out.println(tab() + "goto :end");
+        System.out.println(tab() + "begin:");
+        tabCounter++;
+        System.out.println(tab() + "<inside begin>");
+        tabCounter--;
+        System.out.println(tab() + "end:");
+        tabCounter++;
+        System.out.println(tab() + "<inside end>");
+        System.out.println(tab() + "goto :begin");
+        tabCounter--;
+
+        n.f0.accept(this,argu);
+        n.f1.accept(this,argu);
+        n.f2.accept(this,argu);
+        n.f3.accept(this,argu);
+        n.f4.accept(this,argu);
         return null;
     }
 
@@ -250,7 +271,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
 
             //copy-pasted
             error();
-            
+
             tabCounter--;
             isNew = false;
         }
@@ -321,11 +342,9 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         n.f2.accept(this,argu); // can print 1 from here but also prints every IntegerLiteral
-        System.out.println(")");
+        //System.out.println(")");
         return null;
     }
-
-    // visit equals
 
     /********************
      *  DISPLAY OUTPUT  *
@@ -338,7 +357,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
         n.f1.accept(this,argu);
         //System.out.println("    "+n.f2.getClass().getSimpleName());
         if(isPrintStatement) {
-            System.out.println(tab() + "PrintIntS()");
+            System.out.println(tab() + "PrintIntS()"); // need to get argument
         }
         isPrintStatement = true;
         n.f2.accept(this,argu);
@@ -354,8 +373,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
     public String memAlloc(VTable vtable){
         int recordSize = vtable.records.size();
         int allocSize = recordSize * 4 + 4;
-        String r = "HeapAllocZ(" + allocSize + ")";
-        return r;
+        return "HeapAllocZ(" + allocSize + ")";
     }
 
     /***********
@@ -363,6 +381,7 @@ public class Translator extends GJDepthFirst<AbstractTable,AbstractTable> {
      ***********/
 
     public void error(){
+        //need unique label names
         System.out.println(tab() + "if t.0 goto :null1\n" +
                 tab() + "  Error(\"null pointer\")\n" +
                 "  null1:");
