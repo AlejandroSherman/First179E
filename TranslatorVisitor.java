@@ -155,6 +155,9 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         argu.Global.CurrentMethod.addParam(varName, tempVar);
         argu.Global.CurrentVar = tempVar;
 
+        //Vapor Stuff
+        argu.Global.CurrentFunc.params.add(" "+ varName);
+
         AbstractTable _ret=null;
         n.f0.accept(this, argu); // f0 -> Type()
         n.f1.accept(this, argu); // f1 -> Identifier()
@@ -201,20 +204,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     /*
     **********************************Below here is new code**************************************************
     */ 
-
-    @Override
-    public AbstractTable visit(IntegerLiteral n, AbstractTable argu) {
-        /////////////////// test
-        String varName = argu.Global.CurrentVar.varName;
-        String varValue = n.f0.tokenImage;
-
-        //System.out.print(varValue);
-
-        n.f0.accept(this, argu);
-
-        return null;
-    }
-
     
     @Override
     public AbstractTable visit(IfStatement n, AbstractTable argu) {
