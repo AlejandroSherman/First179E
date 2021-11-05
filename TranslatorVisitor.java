@@ -1,3 +1,4 @@
+//First pass, create and fill all the vtables
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
@@ -7,19 +8,20 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     /*******************
      *  CLASS GLOBALS  *
      *******************/
-
-    public static int tempCounter = 0;
-    public static int ifCounter = 0;
-    public static int ifLabelCounter = 0;
-    public static int tabCounter = 0;
-    public static LinkedList temps = new LinkedList();
-    public static LinkedList statements = new LinkedList();
+    Integer classIndex = 0;
+    Integer funcIndex = 0;
+    int tempCounter = 0;
+    int ifCounter = 0;
+    int ifLabelCounter = 0;
+    int tabCounter = 0;
+    LinkedList<String> temps = new LinkedList<String>();
+    LinkedList<String> statements = new LinkedList<String>();
 
     /**********************
      *  HELPER FUNCTIONS  *
      **********************/
 
-    public String tab(){
+    private String tab(){
         String tabs = "";
         for(int i = 0; i < tabCounter; i++){
             tabs += "  ";
@@ -31,16 +33,36 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
      *  DECLARATIONS  *
      ******************/
 
+    public AbstractTable visit(Goal n, AbstractTable argu){
+        argu.Global.CurrentClass = new OneClass();
+        argu.Global.CurrentMethod = new OneMethod();
+        argu.Global.CurrentVar = new OneVar();
+        argu.Global.classOrmethod = "none";
+
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu); // f0 -> MainClass()
+        n.f1.accept(this, argu); // f1 -> ( TypeDeclaration() )*
+        n.f2.accept(this, argu); // f2 -> <EOF>
+        return _ret;
+    }
+
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argu) {
-        /*
-        LinkedList<String> main = new LinkedList<>();
-        main.add("func Main()");
-        AbstractTable i = new AbstractTable();
-        for(Node statement: n.f15.nodes){
-            //System.out.println(statement.accept(this, argu));
-            i = statement.accept(this,argu);
-        }*/
+        argu.Global.classOrmethod = "class";
+        OneClass tempClass = new OneClass("Main");
+        OneMethod tempMethod = new OneMethod("main", "void", "Main");
+        argu.Global.CurrentClass = tempClass;
+        argu.Global.CurrentMethod = tempMethod;
+        argu.Global.addClass("Main", tempClass);
+
+        //Vapor stuff
+        VTable tempTable = new VTable("Main", classIndex);
+        argu.GlobalVTables.vtables.put("Main", tempTable);
+        OneFunction tempFunc = new OneFunction("Main",0,tempTable);
+        argu.GlobalCodeGen.addFunc("Main", tempFunc);
+        classIndex++;
+        funcIndex=0;
+        argu.Global.CurrentFunc = tempFunc;
 
         System.out.println("\n\nfunc Main()");
         tabCounter++;
@@ -67,7 +89,9 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         
         n.f16.accept(this, argu); // f16 -> "}"
         n.f17.accept(this, argu); // f17 -> "}"
-        
+
+        tempFunc.code += "   ret\n";
+
         System.out.println(tab() + "ret");
         tabCounter = 0;
         return _ret;
@@ -75,42 +99,88 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(ClassDeclaration n, AbstractTable argu) {
-        n.f0.accept(this,argu);
+        argu.Global.classOrmethod = "class";
+        String className = n.f1.f0.toString();
+        OneClass tempClass = new OneClass(className);
+        argu.Global.CurrentClass = tempClass;
+        argu.Global.addClass(className, tempClass);
+
+        //Vapor Stuff (Missing extended classes)
+        VTable tempTable = new VTable(className, classIndex);
+        argu.GlobalVTables.vtables.put(className, tempTable);
+        classIndex++;
+        funcIndex=0;
+
+        n.f0.accept(this, argu); // f0 -> "class"
 
         //VTable vtable = argu.GlobalVTables.vtables.get(argu.Global.CurrentClass.className);
         //System.out.println("t." + tempCounter + " = " + memAlloc(vtable));
 
-        n.f1.accept(this,argu);
-        n.f2.accept(this,argu);
-        n.f3.accept(this,argu);
-        n.f4.accept(this,argu);
-        n.f5.accept(this,argu);
+        n.f1.accept(this, argu); // f1 -> Identifier()
+        n.f2.accept(this, argu); // f2 -> "{"
+        n.f3.accept(this, argu); // f3 -> ( VarDeclaration() )*
+        n.f4.accept(this, argu); // f4 -> ( MethodDeclaration() )*
+        n.f5.accept(this, argu); // f5 -> "}"
         return null;
+    }
+
+    @Override
+    public AbstractTable visit(ClassExtendsDeclaration n, AbstractTable argu) {
+        argu.Global.CurrentClass.children.add(n.f1.f0.tokenImage);
+
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu); // f0 -> "class"
+        n.f1.accept(this, argu); // f1 -> Identifier()
+        n.f2.accept(this, argu); // f2 -> "extends"
+        n.f3.accept(this, argu); // f3 -> Identifier()
+        n.f4.accept(this, argu); // f4 -> "{"
+        n.f5.accept(this, argu); // f5 -> ( VarDeclaration() )*
+        n.f6.accept(this, argu); // f6 -> ( MethodDeclaration() )*
+        n.f7.accept(this, argu); // f7 -> "}"
+        return _ret;
     }
 
     public static boolean isPrimaryExpression = false;
     @Override
     public AbstractTable visit(MethodDeclaration n, AbstractTable argu){
+        argu.Global.classOrmethod = "method";
+        String methodName = n.f2.f0.toString();
+        String returnType = n.f1.f0.choice.getClass().getSimpleName();
+        returnType = argu.dictionary.getRealType(returnType);
+        OneMethod tempMethod = new OneMethod(methodName, returnType, argu.Global.CurrentClass.className);
+        argu.Global.CurrentMethod = tempMethod;
+        argu.Global.CurrentClass.addMethod(methodName, tempMethod);
+
+        //Vapor Stuff
+        VTable tempTable = argu.GlobalVTables.vtables.get(argu.Global.CurrentClass.className);
+        tempTable.addFunc(methodName);
+        OneFunction tempFunc = new OneFunction(methodName ,funcIndex, tempTable);
+        argu.GlobalCodeGen.addFunc(methodName, tempFunc);
+        funcIndex++;
+        argu.Global.CurrentFunc = tempFunc;
+
         System.out.println("\nfunc " + n.f2.f0.tokenImage + "()");
         tabCounter++;
 
-        n.f0.accept(this,argu);
-        n.f1.accept(this,argu);
-        n.f2.accept(this,argu);
-        n.f3.accept(this,argu);
-        n.f4.accept(this,argu);
-        n.f5.accept(this,argu);
-        n.f6.accept(this,argu);
-        n.f7.accept(this,argu);
-        n.f8.accept(this,argu);
-        n.f9.accept(this,argu);
+        n.f0.accept(this, argu); // f0 -> "public"
+        n.f1.accept(this, argu); // f1 -> Type()
+        n.f2.accept(this, argu); // f2 -> Identifier()
+        n.f3.accept(this, argu); // f3 -> "("
+        n.f4.accept(this, argu); // f4 -> ( FormalParameterList() )?
+        n.f5.accept(this, argu); // f5 -> ")"
+        n.f6.accept(this, argu); // f6 -> "{"
+        n.f7.accept(this, argu); // f7 -> ( VarDeclaration() )*
+        n.f8.accept(this, argu); // f8 -> ( Statement() )*
+        n.f9.accept(this, argu); // f9 -> "return"
 
         System.out.print(tab() + "ret ");
         isPrimaryExpression = true;
 
-        n.f10.accept(this,argu);
-        n.f11.accept(this,argu);
-        n.f12.accept(this,argu);
+        n.f10.accept(this, argu); // f10 -> Expression()
+        n.f11.accept(this, argu); // f11 -> ";"
+        n.f12.accept(this, argu); // f12 -> "}"
+
+        tempFunc.code += "   ret\n";
         tabCounter = 0;
         return null;
     }
@@ -124,10 +194,40 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         //argu.Global.CurrentVar.varName = varName; // test
         //System.out.println("    " + varType + " "  + varName );
 
+        OneVar tempVar = new OneVar(varName, varType, argu.Global.CurrentClass.className, argu.Global.CurrentMethod.methodName);
+        argu.Global.CurrentVar = tempVar;
+
+        if(argu.Global.classOrmethod.equals("class"))
+            argu.Global.CurrentClass.addVar(varName, tempVar);
+        else
+            argu.Global.CurrentMethod.addLocal(varName, tempVar);
+
         AbstractTable _ret=null;
-        n.f0.accept(this,argu);
-        n.f1.accept(this,argu);
-        n.f2.accept(this,argu);
+        n.f0.accept(this, argu); // f0 -> Type()
+        n.f1.accept(this, argu); // f1 -> Identifier()
+        n.f2.accept(this, argu); // f2 -> ";"
+        return _ret;
+    }
+
+    /***************
+     *  PARAMETERS *
+     ***************/
+
+    @Override
+    public AbstractTable visit(FormalParameter n, AbstractTable argu) {
+        String varType = n.f0.f0.choice.getClass().getSimpleName();
+        varType = argu.dictionary.getRealType(varType);
+        String varName = n.f1.f0.tokenImage;
+        OneVar tempVar = new OneVar(varName, varType, argu.Global.CurrentClass.className, argu.Global.CurrentMethod.methodName);
+        argu.Global.CurrentMethod.addParam(varName, tempVar);
+        argu.Global.CurrentVar = tempVar;
+
+        //Vapor Stuff
+        argu.Global.CurrentFunc.params.add(" "+ varName);
+
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu); // f0 -> Type()
+        n.f1.accept(this, argu); // f1 -> Identifier()
         return _ret;
     }
 
@@ -136,8 +236,22 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
      ********************/
 
     @Override
+    public AbstractTable visit(Type n, AbstractTable argu) {
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu);  //f0 -> ArrayType() | BooleanType() | IntegerType() | Identifier()
+        return _ret;
+    }
+
+    @Override
     public AbstractTable visit(Identifier n, AbstractTable argu) {
-        n.f0.accept(this,argu);
+        if( argu.Global.CurrentVar.varType.equals("(Class)") ){
+            argu.Global.CurrentVar.varType = n.f0.tokenImage;
+        }
+        if( argu.Global.CurrentMethod.returnType.equals("(Class)") ){
+            argu.Global.CurrentMethod.returnType = n.f0.tokenImage;
+        }
+
+        n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
         if(isPrimaryExpression) {
             System.out.println(n.f0.tokenImage);
             isPrimaryExpression = false;
@@ -165,29 +279,36 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(IfStatement n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
+        tempFunc.code += "   t.0 = ";
         System.out.print(tab() + "t." + tempCounter + " = ");
         n.f2.accept(this,argu);
         n.f3.accept(this,argu);
 
         // TODO get unique labels
+        tempFunc.code += "   if0 t.0 goto :if1_else\n";
         System.out.println(tab() + "if" + ifCounter++ + " t." + tempCounter++ + " goto :if" + ++ifLabelCounter + "_else");
-            // TODO do something inside if statement
-            tabCounter++;
-            n.f4.accept(this,argu);
+        // TODO do something inside if statement
+        tabCounter++;
+        n.f4.accept(this,argu);
         if(isAssign){ // TODO temp fix for assignments
-            System.out.println("THERE WAS NOTHING ASSIGNED!");
-            isAssign = false;
+        System.out.println("THERE WAS NOTHING ASSIGNED!");
+        isAssign = false;
         }
+        tempFunc.code += "      goto :if1_end\n";
         System.out.println(tab() + "goto :if" + ifCounter + "_end");
         tabCounter--;
         n.f5.accept(this,argu);
+        tempFunc.code += "   if1_else:\n";
         System.out.println(tab() + "if" + ifLabelCounter + "_else:");
-            // TODO do something inside if-else statement
-            tabCounter++;
-            n.f6.accept(this,argu);
-            tabCounter--;
+        // TODO do something inside if-else statement
+        tabCounter++;
+        n.f6.accept(this,argu);
+        tabCounter--;
+        tempFunc.code += "   if1_end:\n";
         System.out.println(tab() + "if" + ifCounter + "_end:");
         ifCounter = 0;
         tempCounter = 0;
@@ -225,7 +346,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(Statement n, AbstractTable argu) {
-        statements.add(n.f0.choice.getClass().getSimpleName());
+        //statements.add(n.f0.choice.getClass().getSimpleName());
         //System.out.println(statements.getLast());
         n.f0.accept(this,argu);
         return null;
@@ -234,10 +355,13 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public static boolean isAssign = false;
     @Override
     public AbstractTable visit(AssignmentStatement n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
         String id = n.f0.f0.tokenImage;
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         isAssign = true;
+        tempFunc.code += "      " + id + " = \n"; // I think we can drop "\n"
         System.out.print(tab() + id + " = ");
         n.f2.accept(this,argu);
         return null;
@@ -333,12 +457,16 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(CompareExpression n, AbstractTable argu) {
+        OneFunction tempFunc = argu.Global.CurrentFunc;
+
         isAssign = false;
         boolean signedInt = true; // TODO get type from symbol table and check if signed int or not
         if(signedInt){
+            tempFunc.code += "LtS(num 1)";
             System.out.println("LtS(num 1)"); // TODO get variable and IntegerLiteral
         }
         else{
+            tempFunc.code += "Lt(num 1)";
             System.out.println("Lt(num 1)"); // TODO get variable and IntegerLiteral
         }
 
@@ -347,6 +475,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f1.accept(this,argu); // TODO can get the operator from here
         n.f2.accept(this,argu); // can print 1 from here but also prints every IntegerLiteral
                                    // TODO can get the 2nd value from here and append to first var
+        //tempFunc.code += ")\n";
         //System.out.println(")");
         return null;
     }
