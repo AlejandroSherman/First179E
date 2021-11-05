@@ -5,6 +5,10 @@ public class SymbolTable extends AbstractTable {
     public OneClass CurrentClass;
     public OneMethod CurrentMethod;
     public OneVar CurrentVar;
+<<<<<<< Updated upstream
+=======
+    public OneFunction CurrentFunc;
+>>>>>>> Stashed changes
     public String classOrmethod;
 
     public SymbolTable(){
