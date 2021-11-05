@@ -278,6 +278,11 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             System.out.println(varValue);
             isAssign = false;
         }
+        /*else{ // prints MulS(num t.3) and adds "t.1 = [t.0]" to Main. ERROR: adds "t.2 = [t.1]" to Fac.ComputeFac()
+            tempCounter++;
+            tempFunc.code += tab() + "t." + tempCounter + " = [t." + (tempCounter-1) + "]\n";
+            System.out.println(tab() + "t." + tempCounter + " = [t." + (tempCounter-1) + "]");
+        }*/
         n.f0.accept(this, argu);
         return null;
     }
