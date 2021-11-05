@@ -353,6 +353,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         tabCounter++;
         tempFunc.code += tab() + "<inside end>\n";
         System.out.println(tab() + "<inside end>"); //TODO fill loop end
+        tempFunc.code += tab() + "goto :begin\n";
         System.out.println(tab() + "goto :begin");
         tabCounter--;
 
