@@ -3,6 +3,7 @@ import syntaxtree.*;
 import visitor.GJDepthFirst;
 
 import java.util.LinkedList;
+import java.util.Objects;
 
 public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     /*******************
@@ -20,6 +21,16 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     boolean isPrimaryExpression = false;
     boolean isAssign = false;
     boolean isNew = true;
+    boolean isCompare = false;
+    boolean isParam = false;
+    boolean isMessageSend = false;
+    boolean isRet = false;
+    boolean isVarDeclaration = false;
+    boolean isPlusExpression = false;
+    String add1 = "";
+    String add2 = "";
+    int sum;
+
 
     /**********************
      *  HELPER FUNCTIONS  *
@@ -174,10 +185,11 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f9.accept(this, argu); // f9 -> "return"
 
         tempFunc.code += tab() + "ret ";
+        isRet = true;
         //System.out.print(tab() + "ret ");
-        isPrimaryExpression = true;
 
         n.f10.accept(this, argu); // f10 -> Expression()
+
         n.f11.accept(this, argu); // f11 -> ";"
         n.f12.accept(this, argu); // f12 -> "}"
 
@@ -188,6 +200,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(VarDeclaration n, AbstractTable argu) {
+        isVarDeclaration = true;
         String varType = n.f0.f0.choice.getClass().getSimpleName();
         varType = argu.dictionary.getRealType(varType);
         String varName = n.f1.f0.tokenImage;
@@ -202,6 +215,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f0.accept(this, argu); // f0 -> Type()
         n.f1.accept(this, argu); // f1 -> Identifier()
         n.f2.accept(this, argu); // f2 -> ";"
+        isVarDeclaration = false;
         return _ret;
     }
 
@@ -211,6 +225,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(FormalParameter n, AbstractTable argu) {
+        isParam = true;
         String varType = n.f0.f0.choice.getClass().getSimpleName();
         varType = argu.dictionary.getRealType(varType);
         String varName = n.f1.f0.tokenImage;
@@ -224,6 +239,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         AbstractTable _ret=null;
         n.f0.accept(this, argu); // f0 -> Type()
         n.f1.accept(this, argu); // f1 -> Identifier()
+        isParam = false;
         return _ret;
     }
 
@@ -248,7 +264,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         }
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
-        if(isPrimaryExpression) {
+        if(isPrimaryExpression && isRet) {
             argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage + "\n";
             //System.out.println(n.f0.tokenImage);
             isPrimaryExpression = false;
@@ -259,11 +275,32 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(IntegerLiteral n, AbstractTable argu) {
         String varValue = n.f0.tokenImage;
-        if(isAssign) {
+
+        if(add1.equals("")){
+            add1 = varValue;
+        }
+        else if(add2.equals("")){
+            add2 = varValue;
+            sum = Integer.parseInt(add1) + Integer.parseInt(add2);
+        }
+        if(isRet){
+            argu.GlobalVTables.CurrentFunc.code += varValue + "\n";
+        }
+        else if(!isVarDeclaration && !isPlusExpression){
+            argu.GlobalVTables.CurrentFunc.code += varValue;
+        }
+        else if (isPrimaryExpression && !isPlusExpression) {
+            argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(" + varValue + ")\n";
+            isPrimaryExpression = false;
+        }
+        else if (isAssign) {
             argu.GlobalVTables.CurrentFunc.code += varValue + "\n";
             //System.out.println(varValue);
             isAssign = false;
         }
+
+
+
         /*else{ // prints MulS(num t.3) and adds "t.1 = [t.0]" to Main. ERROR: adds "t.2 = [t.1]" to Fac.ComputeFac()
             tempCounter++;
             tempFunc.code += tab() + "t." + tempCounter + " = [t." + (tempCounter-1) + "]\n";
@@ -374,17 +411,20 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         argu.GlobalVTables.CurrentFunc.code += tab() + id + " = ";
         //System.out.print(tab() + id + " = ");
         n.f2.accept(this,argu);
+        isAssign = false;
         return null;
     }
 
     @Override
     public AbstractTable visit(MessageSend n, AbstractTable argu) {
+        isMessageSend = true;
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         n.f2.accept(this,argu);
         n.f3.accept(this,argu);
         n.f4.accept(this,argu);
         n.f5.accept(this,argu);
+        isMessageSend = false;
         return null;
     }
 
@@ -419,7 +459,9 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(PrimaryExpression n, AbstractTable argu) {
+        isPrimaryExpression = true;
         n.f0.accept(this,argu);
+        isPrimaryExpression = false;
         return null;
     }
 
@@ -429,11 +471,26 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(PlusExpression n, AbstractTable argu) {
-        argu.GlobalVTables.CurrentFunc.code += "Add(num " + "t." + tempCounter + ")\n";
+        isPlusExpression = true;
+        //argu.GlobalVTables.CurrentFunc.code += "Add(num " + "t." + tempCounter + ")\n";
         //System.out.println("Add(num " + "t." + tempCounter + ")");
-        n.f0.accept(this,argu);
-        n.f1.accept(this,argu);
+
+        if(!isVarDeclaration && !isPrintStatement){
+            argu.GlobalVTables.CurrentFunc.code += "Add(";
+            n.f0.accept(this,argu);
+            argu.GlobalVTables.CurrentFunc.code += " ";
+            n.f1.accept(this,argu);
+            n.f2.accept(this,argu);
+            argu.GlobalVTables.CurrentFunc.code += ")";
+        }
+        else if(!isVarDeclaration && isPrintStatement){
+            n.f0.accept(this,argu);
+            n.f1.accept(this,argu);
+            n.f2.accept(this,argu);
+            argu.GlobalVTables.CurrentFunc.code += sum;
+        }
         //n.f2.accept(this,argu); skip print IntegerLiteral value
+        isPlusExpression = false;
         return null;
     }
 
@@ -464,22 +521,22 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(CompareExpression n, AbstractTable argu) {
-        isAssign = false;
+        isCompare = true;
         boolean signedInt = true; // TODO get type from symbol table and check if signed int or not
 
         String str = argu.Global.CurrentVar.varName; // TODO figure out if param or var
         if(signedInt){
-            argu.GlobalVTables.CurrentFunc.code += "LtS("+ str +" 1)\n"; // TODO get IntegerLiteral
+            argu.GlobalVTables.CurrentFunc.code += "LtS(num 1)\n"; // TODO get IntegerLiteral
         }
         else{
-            argu.GlobalVTables.CurrentFunc.code += "Lt("+ str + " 1)\n";
+            argu.GlobalVTables.CurrentFunc.code += "Lt(num 1)\n";
         }
 
         //System.out.print("LtS(num 1");
-        n.f0.accept(this,argu); // TODO maybe traverse this first and get the var
-        n.f1.accept(this,argu); // TODO can get the operator from here
+        n.f0.accept(this,argu); // maybe traverse this first and get the var
+        n.f1.accept(this,argu); // can get the operator from here
         n.f2.accept(this,argu); // can print 1 from here but also prints every IntegerLiteral
-                                   // TODO can get the 2nd value from here and append to first var
+                                   // can get the 2nd value from here and append to first var
         //tempFunc.code += ")\n";
         //System.out.println(")");
         return null;
@@ -492,16 +549,14 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(PrintStatement n, AbstractTable argu) {
         n.f0.accept(this,argu); // f0 -> "System.out.println"
-        n.f1.accept(this,argu); // f1 -> "("
-
-        n.f2.accept(this,argu); // f2 -> Expression()
-        if(isPrintStatement) { // TODO put the number inside PrintIntS()
-            argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(";
-            argu.GlobalVTables.CurrentFunc.code += ")\n";
-        }
+        n.f1.accept(this,argu); // f1 -> "(
         isPrintStatement = true;
+        argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(";
+        n.f2.accept(this,argu); // f2 -> Expression()
+        argu.GlobalVTables.CurrentFunc.code += ")\n";
         n.f3.accept(this,argu); // f3 -> ")"
         n.f4.accept(this,argu); // f4 -> ";"
+        isPrintStatement = false;
         return null;
     }
 
