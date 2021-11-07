@@ -7,6 +7,7 @@ public class OneFunction {
     public String code; //testing
     public Integer index;
     public Integer classIndex;
+    public String label;
 
     public OneFunction(String n, Integer indx, VTable tempTable){
         name = n;
@@ -16,6 +17,7 @@ public class OneFunction {
         code = "";
         index = indx;
         classIndex = tempTable.index;
+        label = "";
     }
 
     public void printParams(){

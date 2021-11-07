@@ -22,7 +22,7 @@ public class J2V {
             root.accept(translator, completeTable);  // fills vtables
             completeTable.GlobalVTables.printTables();
             completeTable.GlobalCodeGen.printFuncs(completeTable.GlobalVTables.vtables.size());
-            System.out.println("success");
+            //System.out.println("success");
         }
         catch(Exception e) {
             System.out.println("error");

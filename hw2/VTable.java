@@ -55,10 +55,14 @@ public class VTable {
             }
             */
 
-            for (String funcName: funcs.keySet()) {
-                OneFunction tempFunc = funcs.get(funcName);
-                System.out.println("    :" + className + "." + tempFunc.name);  
-            } 
+            //Print Functions in order
+            for (Integer i=0 ; i < funcs.size() ; i++) {
+                for (String funcName: funcs.keySet()) {
+                    OneFunction tempFunc = funcs.get(funcName);
+                    if(tempFunc.index == i) System.out.println("    :" + className + "." + tempFunc.name);  
+                    //if(tempFunc.index == i) System.out.println("    :"+tempFunc.index + " " + className + "." + tempFunc.name);  
+                } 
+            }
             System.out.print("\n");
         }
     }
