@@ -27,12 +27,11 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     boolean isRet = false;
     boolean isVarDeclaration = false;
     boolean isPlusExpression = false;
-    boolean isMain = false;
     String add1 = "";
     String add2 = "";
     int sum;
     String sysPrint = "";
-
+    String returnData = "";
 
     /**********************
      *  HELPER FUNCTIONS  *
@@ -67,7 +66,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argu) {
-        isMain = true;
         argu.Global.classOrmethod = "class";
         OneClass tempClass = new OneClass("Main");
         OneMethod tempMethod = new OneMethod("main", "void", "Main");
@@ -106,7 +104,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f16.accept(this, argu); // f16 -> "}"
         n.f17.accept(this, argu); // f17 -> "}"
-
         tempFunc.code += tab() + "ret\n";
         //System.out.println(tab() + "ret");
         tabCounter = 0;
@@ -289,6 +286,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             add2 = "";
         }
         if(isRet){
+            returnData = varValue;
             argu.GlobalVTables.CurrentFunc.code += varValue + "\n";
         }
         else if((!isVarDeclaration && !isPlusExpression)){
@@ -431,6 +429,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f4.accept(this,argu);
         n.f5.accept(this,argu);
         isMessageSend = false;
+        argu.GlobalVTables.CurrentFunc.code += "  t.1 = [t.0]\n";
+        argu.GlobalVTables.CurrentFunc.code += "  t.1 = [t.1+0]\n";
+        argu.GlobalVTables.CurrentFunc.code += "  t.2 = call t.1(10)\n";
+        sysPrint += "t.2";
         return null;
     }
 
@@ -560,9 +562,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f1.accept(this,argu); // f1 -> "(
         n.f2.accept(this,argu); // f2 -> Expression()
 
-        argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(" + sysPrint;
-
-        argu.GlobalVTables.CurrentFunc.code += ")\n";
+        argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(" + sysPrint + ")\n";
         sysPrint = "";
 
         n.f3.accept(this,argu); // f3 -> ")"
