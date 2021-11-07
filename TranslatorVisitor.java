@@ -17,10 +17,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     int tabCounter = 0;
     LinkedList<String> temps = new LinkedList<String>();
     LinkedList<String> statements = new LinkedList<String>();
-    boolean isPrintStatement = true;
+    boolean isPrintStatement = false;
     boolean isPrimaryExpression = false;
     boolean isAssign = false;
-    boolean isNew = true;
+    boolean isNew = false;
     boolean isCompare = false;
     boolean isParam = false;
     boolean isMessageSend = false;
@@ -270,7 +270,13 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
         if(isPrimaryExpression && isRet) {
-            argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage;// + "\n";
+
+            if(isPrintStatement) {
+                sysPrint += n.f0.tokenImage;
+            }
+            else{
+                argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage;// + "\n";
+            }
             //System.out.println(n.f0.tokenImage);
             isPrimaryExpression = false;
         }
@@ -290,9 +296,19 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             add1 = "";
             add2 = "";
         }
+
         if(isRet){
             returnData = varValue;
             argu.GlobalVTables.CurrentFunc.code += varValue;// + "\n";
+        }
+        else if (isAssign) {
+            argu.GlobalVTables.CurrentFunc.code += varValue;// + "\n";
+            //System.out.println(varValue);
+            isAssign = false;
+        }
+        else if(isPlusExpression && sum != 0){
+            sysPrint += sum;
+
         }
         else if((!isVarDeclaration && !isPlusExpression)){
             sysPrint += varValue;
@@ -301,11 +317,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         else if (isPrimaryExpression && !isPlusExpression) {
             argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(" + varValue + ")\n";
             isPrimaryExpression = false;
-        }
-        else if (isAssign) {
-            argu.GlobalVTables.CurrentFunc.code += varValue + "\n";
-            //System.out.println(varValue);
-            isAssign = false;
         }
 
 
@@ -418,6 +429,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         isAssign = true;
+
         argu.GlobalVTables.CurrentFunc.code += tab() + id + " = ";
         //System.out.print(tab() + id + " = ");
         n.f2.accept(this,argu);
@@ -429,23 +441,29 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(MessageSend n, AbstractTable argu) {
         isMessageSend = true;
-        n.f0.accept(this,argu);
-        n.f1.accept(this,argu);
-        n.f2.accept(this,argu);
-        n.f3.accept(this,argu);
-        n.f4.accept(this,argu);
-        n.f5.accept(this,argu);
-        isMessageSend = false;
+
         if(isMain) {
-            argu.GlobalVTables.CurrentFunc.code += "  t." + ++tempCounter + " = [t." + (tempCounter-1) + "]\n";
-            argu.GlobalVTables.CurrentFunc.code += "  t." + tempCounter + " = [t." + tempCounter + "+0]\n";
-            argu.GlobalVTables.CurrentFunc.code += "  t." + ++tempCounter + " = call t."+ (tempCounter-1) + "(10)\n";
+            n.f0.accept(this,argu); // f0 -> PrimaryExpression()
+            argu.GlobalVTables.CurrentFunc.code += tab() + "t." + ++tempCounter + " = [t." + (tempCounter-1) + "]\n";
+            argu.GlobalVTables.CurrentFunc.code += tab() + "t." + tempCounter + " = [t." + tempCounter + "+0]\n";
+            argu.GlobalVTables.CurrentFunc.code += tab() + "t." + ++tempCounter + " = call t."+ (tempCounter-1) + "(10)\n";
             sysPrint += "t." + tempCounter;
+            n.f1.accept(this,argu);
+            n.f2.accept(this,argu); // f2 -> Identifier()
+            n.f3.accept(this,argu);
+            n.f4.accept(this,argu); // f4 -> ( ExpressionList() )?
         }
         else if(isMethod){
-            argu.GlobalVTables.CurrentFunc.code += "this.helper()";
+            argu.GlobalVTables.CurrentFunc.code += "call t." + tempCounter + "(this ";
+            n.f0.accept(this,argu); // f0 -> PrimaryExpression()
+            n.f1.accept(this,argu);
+            n.f2.accept(this,argu); // f2 -> Identifier()
+            n.f3.accept(this,argu);
+            n.f4.accept(this,argu); // f4 -> ( ExpressionList() )?
+            argu.GlobalVTables.CurrentFunc.code += ")";
         }
 
+        isMessageSend = false;
         tempCounter = 0;
         return null;
     }
@@ -464,18 +482,15 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public AbstractTable visit(AllocationExpression n, AbstractTable argu) {
         n.f0.accept(this, argu);
         VTable vtable = argu.GlobalVTables.vtables.get(argu.Global.CurrentClass.className);
-        if(isNew) {
+        //if(isNew) {
             argu.GlobalVTables.CurrentFunc.code += tab() + "t." + tempCounter + " = " + memAlloc(vtable) + "\n";
-            //System.out.println(tab() + "t." + tempCounter + " = " + memAlloc(vtable));
             argu.GlobalVTables.CurrentFunc.code += tab() + "[t." + tempCounter + "] = :vmt_" + n.f1.f0.tokenImage + "\n";
-            //System.out.println(tab() + "[t." + tempCounter + "] = :vmt_" + n.f1.f0.tokenImage);
             argu.GlobalVTables.CurrentFunc.code += error() + "\n";
-            //System.out.println(error()); // error checking (null ptr, etc.)
-            isNew = false;
-        }
+        //}
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
+        isNew = false;
         return null;
     }
 
@@ -505,12 +520,13 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             n.f2.accept(this,argu);
             argu.GlobalVTables.CurrentFunc.code += ")";
         }
-        else if(!isVarDeclaration && isPrintStatement){
+        else{
+        //else if(!isVarDeclaration && isPrintStatement){
             n.f0.accept(this,argu);
             n.f1.accept(this,argu);
             n.f2.accept(this,argu);
             //argu.GlobalVTables.CurrentFunc.code += sum;
-            sysPrint += sum;
+            //sysPrint += sum;
         }
         //n.f2.accept(this,argu); skip print IntegerLiteral value
         isPlusExpression = false;
@@ -573,10 +589,12 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public AbstractTable visit(PrintStatement n, AbstractTable argu) {
         isPrintStatement = true;
         n.f0.accept(this,argu); // f0 -> "System.out.println"
-        n.f1.accept(this,argu); // f1 -> "(
-        n.f2.accept(this,argu); // f2 -> Expression()
+        n.f1.accept(this,argu); // f1 -> "("
 
-        argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(" + sysPrint + ")\n";
+        //argu.GlobalVTables.CurrentFunc.code += tab() + "PrintIntS(";
+        sysPrint += tab() + "PrintIntS(";
+        n.f2.accept(this,argu); // f2 -> Expression()
+        argu.GlobalVTables.CurrentFunc.code += sysPrint + ")\n";
         sysPrint = "";
 
         n.f3.accept(this,argu); // f3 -> ")"
