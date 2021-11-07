@@ -47,6 +47,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     String arrayName = "";
     String arraySize = "";
     boolean isArrayLookup = false;
+    boolean isFuncParam = false;
 
     /**********************
      *  HELPER FUNCTIONS  *
@@ -256,6 +257,8 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     public AbstractTable visit(Identifier n, AbstractTable argu) {
         if(isArrayDecl) arrayName = n.f0.tokenImage;
         if(isArrayLookup) arrayName = n.f0.tokenImage;
+
+        if(isFuncParam) argu.GlobalVTables.CurrentFunc.code += " " + n.f0.tokenImage;
 
         if(isClassHeader) classUsed = n.f0.tokenImage;
         else if(isMessageSend) funcCalled = n.f0.tokenImage;
@@ -567,10 +570,11 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(ExpressionList n, AbstractTable argu) {
-        //if(isMessageSend) argu.GlobalVTables.CurrentFunc.code += varValue;
+        isFuncParam = true;
         AbstractTable _ret=null;
         n.f0.accept(this, argu); // f0 -> Expression()
         n.f1.accept(this, argu); // f1 -> ( ExpressionRest() )*
+        isFuncParam = false;
         return _ret;
     }
 
