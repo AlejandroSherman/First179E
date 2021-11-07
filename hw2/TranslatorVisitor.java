@@ -2,6 +2,7 @@
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 import java.util.LinkedList;
+import java.util.HashMap;
 
 public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
     /*******************
@@ -40,6 +41,12 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     String returnLabel = "";
     String leftSide = "";
     boolean isPrintVar = false;
+    boolean isArrayAssign = false;
+    boolean isArrayDecl = false;
+    HashMap<String, String> arrayData = new HashMap<String, String>(); // <name,size>
+    String arrayName = "";
+    String arraySize = "";
+    boolean isArrayLookup = false;
 
     /**********************
      *  HELPER FUNCTIONS  *
@@ -69,6 +76,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f0.accept(this, argu); // f0 -> MainClass()
         n.f1.accept(this, argu); // f1 -> ( TypeDeclaration() )*
         n.f2.accept(this, argu); // f2 -> <EOF>
+        
         return _ret;
     }
 
@@ -246,13 +254,15 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(Identifier n, AbstractTable argu) {
+        if(isArrayDecl) arrayName = n.f0.tokenImage;
+        if(isArrayLookup) arrayName = n.f0.tokenImage;
 
         if(isClassHeader) classUsed = n.f0.tokenImage;
         else if(isMessageSend) funcCalled = n.f0.tokenImage;
         else if(isVaporParam) argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage;
         else if(isRightSide) argu.GlobalVTables.CurrentFunc.code += "  " + leftSide + " = " + n.f0.tokenImage + "\n";
 
-        if(isPrintVar && !isMessageSend) sysPrint = n.f0.tokenImage;
+        if(isPrintVar && !isMessageSend && !isArrayLookup) sysPrint = n.f0.tokenImage;
         if(isRet) returnData = n.f0.tokenImage;
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
@@ -269,6 +279,19 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(IntegerLiteral n, AbstractTable argu) {
         String varValue = n.f0.tokenImage;
+
+        if(isArrayLookup) arraySize = varValue;
+
+        if(isArrayDecl){
+            arraySize = varValue;
+            arrayData.put(arrayName, arraySize);
+            argu.GlobalVTables.CurrentFunc.code += "  s1 = MulS(" +arraySize+" 4)\n";
+            argu.GlobalVTables.CurrentFunc.code += "  s2 = Add(s1 4)\n";
+            argu.GlobalVTables.CurrentFunc.code += "  "+ arrayName + " = HeapAllocZ(s2)\n";
+            argu.GlobalVTables.CurrentFunc.code += "  ["+ arrayName + "] = "+ arraySize+"\n";
+            isArrayDecl = false;
+        }
+
 
         if(isPlusExpression) argu.GlobalVTables.CurrentFunc.code += varValue;
 
@@ -454,6 +477,71 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         return null;
     }
+
+    @Override
+    public AbstractTable visit(ArrayType n, AbstractTable argu) {
+        isArrayDecl =true;
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu); // f0 -> "int"
+        n.f1.accept(this, argu); // f1 -> "["
+        n.f2.accept(this, argu); // f2 -> "]"
+        return _ret;
+    }
+
+
+    @Override
+    public AbstractTable visit(ArrayLookup n, AbstractTable argu) {
+        isArrayLookup = true;
+        
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu); // f0 -> PrimaryExpression()
+        n.f1.accept(this, argu); // f1 -> "["
+        n.f2.accept(this, argu); // f2 -> PrimaryExpression()
+        n.f3.accept(this, argu); // f3 -> "]"
+
+        
+        String tempSize = arrayData.get(arrayName);
+        int size = Integer.parseInt(arraySize);
+        int access = Integer.parseInt(tempSize);
+        
+        if(access >= size){
+            argu.GlobalVTables.CurrentFunc.code += "  PrintIntS(0)\n";
+            argu.GlobalVTables.CurrentFunc.code += "  Error(\"array index out of bounds\")\n";
+            //System.out.println("error array out of bounds");
+            //System.exit(1);
+        }
+
+        //do array access stuff here   
+        //argu.GlobalVTables.CurrentFunc.code += "  s = ["+ arrayName +"]\n";
+        //argu.GlobalVTables.CurrentFunc.code += "  ok = LtS("+ tempSize +","+ arraySize +")\n";
+        //argu.GlobalVTables.CurrentFunc.code += "  if ok goto :l'\n";
+        //argu.GlobalVTables.CurrentFunc.code += "    Error(\"Array index out of bounds\")\n";
+        //argu.GlobalVTables.CurrentFunc.code += "  l': ok = LtS(-1,"+ tempSize +")\n";
+        //argu.GlobalVTables.CurrentFunc.code += "  if ok goto :l\n";
+        //argu.GlobalVTables.CurrentFunc.code += "    Error(\"Array index out of bounds\")\n";
+        //argu.GlobalVTables.CurrentFunc.code += "  l: o = MultS("+tempSize+" 4)\n";
+        //argu.GlobalVTables.CurrentFunc.code += "     d = Add("+arrayName+" o)\n";
+        //argu.GlobalVTables.CurrentFunc.code += "     r = [d+4]\n";
+
+
+        isArrayLookup = false;
+        return _ret;
+    }
+  
+
+    @Override
+    public AbstractTable visit(ArrayAssignmentStatement n, AbstractTable argu) {
+        AbstractTable _ret=null;
+        n.f0.accept(this, argu); // f0 -> Identifier()
+        n.f1.accept(this, argu); // f1 -> "["
+        n.f2.accept(this, argu); // f2 -> Expression()
+        n.f3.accept(this, argu); // f3 -> "]"
+        n.f4.accept(this, argu); // f4 -> "="
+        n.f5.accept(this, argu); // f5 -> Expression()
+        n.f6.accept(this, argu); // f6 -> ";"
+        return _ret;
+    }
+  
 
     /*****************
      *  EXPRESSIONS  *
