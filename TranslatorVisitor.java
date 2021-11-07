@@ -27,6 +27,8 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     boolean isRet = false;
     boolean isVarDeclaration = false;
     boolean isPlusExpression = false;
+    boolean isMain = false;
+    boolean isMethod = false;
     String add1 = "";
     String add2 = "";
     int sum;
@@ -66,6 +68,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(MainClass n, AbstractTable argu) {
+        isMain = true;
         argu.Global.classOrmethod = "class";
         OneClass tempClass = new OneClass("Main");
         OneMethod tempMethod = new OneMethod("main", "void", "Main");
@@ -107,6 +110,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         tempFunc.code += tab() + "ret\n";
         //System.out.println(tab() + "ret");
         tabCounter = 0;
+        isMain = false;
         return _ret;
     }
 
@@ -153,6 +157,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(MethodDeclaration n, AbstractTable argu){
+        isMethod = true;
         argu.Global.classOrmethod = "method";
         String methodName = n.f2.f0.toString();
         String returnType = n.f1.f0.choice.getClass().getSimpleName();
@@ -193,7 +198,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f11.accept(this, argu); // f11 -> ";"
         n.f12.accept(this, argu); // f12 -> "}"
 
-
+        isMethod = false;
         tabCounter = 0;
         return null;
     }
@@ -265,7 +270,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
         if(isPrimaryExpression && isRet) {
-            argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage + "\n";
+            argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage;// + "\n";
             //System.out.println(n.f0.tokenImage);
             isPrimaryExpression = false;
         }
@@ -287,7 +292,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         }
         if(isRet){
             returnData = varValue;
-            argu.GlobalVTables.CurrentFunc.code += varValue + "\n";
+            argu.GlobalVTables.CurrentFunc.code += varValue;// + "\n";
         }
         else if((!isVarDeclaration && !isPlusExpression)){
             sysPrint += varValue;
@@ -321,6 +326,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f0.accept(this, argu);
         return null;
     }
+
 
     /******************
      *  CONTROL FLOW  *
@@ -415,6 +421,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         argu.GlobalVTables.CurrentFunc.code += tab() + id + " = ";
         //System.out.print(tab() + id + " = ");
         n.f2.accept(this,argu);
+        argu.GlobalVTables.CurrentFunc.code += "\n";
         isAssign = false;
         return null;
     }
@@ -429,10 +436,17 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f4.accept(this,argu);
         n.f5.accept(this,argu);
         isMessageSend = false;
-        argu.GlobalVTables.CurrentFunc.code += "  t.1 = [t.0]\n";
-        argu.GlobalVTables.CurrentFunc.code += "  t.1 = [t.1+0]\n";
-        argu.GlobalVTables.CurrentFunc.code += "  t.2 = call t.1(10)\n";
-        sysPrint += "t.2";
+        if(isMain) {
+            argu.GlobalVTables.CurrentFunc.code += "  t." + ++tempCounter + " = [t." + (tempCounter-1) + "]\n";
+            argu.GlobalVTables.CurrentFunc.code += "  t." + tempCounter + " = [t." + tempCounter + "+0]\n";
+            argu.GlobalVTables.CurrentFunc.code += "  t." + ++tempCounter + " = call t."+ (tempCounter-1) + "(10)\n";
+            sysPrint += "t." + tempCounter;
+        }
+        else if(isMethod){
+            argu.GlobalVTables.CurrentFunc.code += "this.helper()";
+        }
+
+        tempCounter = 0;
         return null;
     }
 
