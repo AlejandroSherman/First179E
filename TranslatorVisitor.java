@@ -3,6 +3,7 @@ import syntaxtree.*;
 import visitor.GJDepthFirst;
 
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Objects;
 
 public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable> {
@@ -221,6 +222,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f1.accept(this, argu); // f1 -> Identifier()
         n.f2.accept(this, argu); // f2 -> ";"
         isVarDeclaration = false;
+
         return _ret;
     }
 
@@ -270,6 +272,10 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
         n.f0.accept(this,argu); // f0 -> <IDENTIFIER>
         if(isPrimaryExpression && isRet) {
+
+
+            PlusStr += n.f0.tokenImage;
+
 
             if(isPrintStatement) {
                 sysPrint += n.f0.tokenImage;
@@ -423,12 +429,21 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         return null;
     }
 
+    boolean doOnce = true;
     @Override
     public AbstractTable visit(AssignmentStatement n, AbstractTable argu) {
         String id = n.f0.f0.tokenImage;
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
         isAssign = true;
+
+        if(n.f2.f0.choice.getClass().getSimpleName().equals("MessageSend")) {
+            if(doOnce) {
+                argu.GlobalVTables.CurrentFunc.code += tab() + "t.0 = [this]\n";
+                argu.GlobalVTables.CurrentFunc.code += tab() + "t.0 = [t.0+0]\n";
+                doOnce = false;
+            }
+        }
 
         argu.GlobalVTables.CurrentFunc.code += tab() + id + " = ";
         //System.out.print(tab() + id + " = ");
@@ -441,7 +456,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     @Override
     public AbstractTable visit(MessageSend n, AbstractTable argu) {
         isMessageSend = true;
-
         if(isMain) {
             n.f0.accept(this,argu); // f0 -> PrimaryExpression()
             argu.GlobalVTables.CurrentFunc.code += tab() + "t." + ++tempCounter + " = [t." + (tempCounter-1) + "]\n";
@@ -506,6 +520,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
      *  ARITHMETIC  *
      ****************/
 
+    String PlusStr = "";
     @Override
     public AbstractTable visit(PlusExpression n, AbstractTable argu) {
         isPlusExpression = true;
@@ -513,11 +528,14 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         //System.out.println("Add(num " + "t." + tempCounter + ")");
 
         if(!isVarDeclaration && !isPrintStatement){
+            PlusStr += "Add(";
             argu.GlobalVTables.CurrentFunc.code += "Add(";
             n.f0.accept(this,argu);
+            PlusStr += " ";
             argu.GlobalVTables.CurrentFunc.code += " ";
             n.f1.accept(this,argu);
             n.f2.accept(this,argu);
+            PlusStr += ")";
             argu.GlobalVTables.CurrentFunc.code += ")";
         }
         else{
