@@ -47,6 +47,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
     String arrayName = "";
     String arraySize = "";
     boolean isArrayLookup = false;
+    boolean isFuncParam = false;
 
     /**********************
      *  HELPER FUNCTIONS  *
@@ -252,15 +253,18 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         return _ret;
     }
 
+    boolean isIfStatement = false;
     @Override
     public AbstractTable visit(Identifier n, AbstractTable argu) {
         if(isArrayDecl) arrayName = n.f0.tokenImage;
         if(isArrayLookup) arrayName = n.f0.tokenImage;
 
+        if(isFuncParam) argu.GlobalVTables.CurrentFunc.code += " " + n.f0.tokenImage;
+
         if(isClassHeader) classUsed = n.f0.tokenImage;
         else if(isMessageSend) funcCalled = n.f0.tokenImage;
         else if(isVaporParam) argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage;
-        //else if(isRightSide) argu.GlobalVTables.CurrentFunc.code += "  " + leftSide + " = " + n.f0.tokenImage + "\n";
+        else if(isRightSide && !isIfStatement) argu.GlobalVTables.CurrentFunc.code += "  " + leftSide + " = " + n.f0.tokenImage + "\n";
 
         if(isPrintVar && !isMessageSend && !isArrayLookup) sysPrint = n.f0.tokenImage;
         if(isRet) returnData = n.f0.tokenImage;
@@ -312,6 +316,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(IfStatement n, AbstractTable argu) {
+        isIfStatement = true;
         n.f0.accept(this,argu); // f0 -> "if"
         n.f1.accept(this,argu); // f1 -> "("
 
@@ -348,7 +353,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         ifCounter = 0;
         //tempCounter = 0;
         lableMngr.resetLabel();
-
+        isIfStatement = false;
         return null;
     }
 
@@ -386,13 +391,14 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(AssignmentStatement n, AbstractTable argu) {
-        isAssign = true;
         leftSide = n.f0.f0.tokenImage;
         varToAssign = leftSide;
+        isAssign = true;
 
         n.f0.accept(this,argu); // f0 -> Identifier()
         n.f1.accept(this,argu); // f1 -> "="
         isRightSide = true;
+
 
         if(n.f2.f0.choice.getClass().getSimpleName().equals("TimesExpression")){
             VTable tempVTable = argu.GlobalVTables.vtables.get(classUsed);
@@ -406,6 +412,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             argu.GlobalVTables.CurrentFunc.code += tab() + "t.3 = call t.1(this t.2)\n";
             argu.GlobalVTables.CurrentFunc.code += tab() + "num_aux = ";
         }
+
 
         n.f2.accept(this,argu); // f2 -> Expression()
         isRightSide = false;
@@ -446,6 +453,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
             argu.GlobalVTables.CurrentFunc.code += ")\n";
             sysPrint += tempLabel;
+
         }
         else if(isAssign){
             vtableLabel = "this";
@@ -484,6 +492,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             argu.GlobalVTables.CurrentFunc.code += ")\n";
             sysPrint += tempLabel;
         }
+
 
         isMessageSend = false;
 
@@ -579,10 +588,11 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(ExpressionList n, AbstractTable argu) {
-        //if(isMessageSend) argu.GlobalVTables.CurrentFunc.code += varValue;
+        isFuncParam = true;
         AbstractTable _ret=null;
         n.f0.accept(this, argu); // f0 -> Expression()
         n.f1.accept(this, argu); // f1 -> ( ExpressionRest() )*
+        isFuncParam = false;
         return _ret;
     }
 
@@ -667,7 +677,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(MinusExpression n, AbstractTable argu) {
-        argu.GlobalVTables.CurrentFunc.code += "Sub(num " + lableMngr.currLabel + ")\n";
+        argu.GlobalVTables.CurrentFunc.code += "Sub(num " + "t." + lableMngr.currLabel + ")\n";
         //System.out.println("Sub(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
         n.f1.accept(this,argu);
@@ -677,8 +687,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(TimesExpression n, AbstractTable argu) {
-
-
+        isAssign = false;
         argu.GlobalVTables.CurrentFunc.code += "MulS(num " + lableMngr.currLabel + ")\n";
         //System.out.println("MulS(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
