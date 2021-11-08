@@ -260,7 +260,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         if(isClassHeader) classUsed = n.f0.tokenImage;
         else if(isMessageSend) funcCalled = n.f0.tokenImage;
         else if(isVaporParam) argu.GlobalVTables.CurrentFunc.code += n.f0.tokenImage;
-        else if(isRightSide) argu.GlobalVTables.CurrentFunc.code += "  " + leftSide + " = " + n.f0.tokenImage + "\n";
+        //else if(isRightSide) argu.GlobalVTables.CurrentFunc.code += "  " + leftSide + " = " + n.f0.tokenImage + "\n";
 
         if(isPrintVar && !isMessageSend && !isArrayLookup) sysPrint = n.f0.tokenImage;
         if(isRet) returnData = n.f0.tokenImage;
@@ -328,7 +328,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         tabCounter++;
 
         n.f4.accept(this,argu); // f4 -> Statement()
-
+        argu.GlobalVTables.CurrentFunc.code += tab() + "num_aux = 1\n";
         if(isAssign){
             argu.GlobalVTables.CurrentFunc.code += "THERE WAS NOTHING ASSIGNED!\n";
             isAssign = false;
@@ -394,13 +394,18 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
         n.f1.accept(this,argu); // f1 -> "="
         isRightSide = true;
 
-        /*if(n.f2.f0.choice.getClass().getSimpleName().equals("TimesExpression")){
+        if(n.f2.f0.choice.getClass().getSimpleName().equals("TimesExpression")){
             VTable tempVTable = argu.GlobalVTables.vtables.get(classUsed);
             OneFunction tempFunc = tempVTable.funcs.get(funcCalled);
             Integer funcOffset = tempFunc.index;
             argu.GlobalVTables.CurrentFunc.code += tab() + lableMngr.currLabel + " = [this]\n";
             argu.GlobalVTables.CurrentFunc.code += tab() + lableMngr.currLabel + " = [" + lableMngr.currLabel + "+" + funcOffset*4 + "]\n";
-        }*/
+            lableMngr.nextLabel();
+            argu.GlobalVTables.CurrentFunc.code += tab() + "t.2 = Sub(num 1)\n";
+            lableMngr.nextLabel();
+            argu.GlobalVTables.CurrentFunc.code += tab() + "t.3 = call t.1(this t.2)\n";
+            argu.GlobalVTables.CurrentFunc.code += tab() + "num_aux = ";
+        }
 
         n.f2.accept(this,argu); // f2 -> Expression()
         isRightSide = false;
@@ -441,7 +446,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
             argu.GlobalVTables.CurrentFunc.code += ")\n";
             sysPrint += tempLabel;
-
         }
         else if(isAssign){
             vtableLabel = "this";
@@ -480,7 +484,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
             argu.GlobalVTables.CurrentFunc.code += ")\n";
             sysPrint += tempLabel;
         }
-
 
         isMessageSend = false;
 
@@ -664,12 +667,6 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(MinusExpression n, AbstractTable argu) {
-        VTable tempVTable = argu.GlobalVTables.vtables.get(classUsed);
-        OneFunction tempFunc = tempVTable.funcs.get(funcCalled);
-        Integer funcOffset = tempFunc.index;
-        argu.GlobalVTables.CurrentFunc.code += tab() + lableMngr.currLabel + " = [this]\n";
-        argu.GlobalVTables.CurrentFunc.code += tab() + lableMngr.currLabel + " = [" + lableMngr.currLabel + "+" + funcOffset*4 + "]\n";
-
         argu.GlobalVTables.CurrentFunc.code += "Sub(num " + lableMngr.currLabel + ")\n";
         //System.out.println("Sub(num " + "t." + tempCounter + ")");
         n.f0.accept(this,argu);
@@ -680,11 +677,7 @@ public class TranslatorVisitor extends GJDepthFirst<AbstractTable,AbstractTable>
 
     @Override
     public AbstractTable visit(TimesExpression n, AbstractTable argu) {
-        VTable tempVTable = argu.GlobalVTables.vtables.get(classUsed);
-        OneFunction tempFunc = tempVTable.funcs.get(funcCalled);
-        Integer funcOffset = tempFunc.index;
-        argu.GlobalVTables.CurrentFunc.code += tab() + lableMngr.currLabel + " = [this]\n";
-        argu.GlobalVTables.CurrentFunc.code += tab() + lableMngr.currLabel + " = [" + lableMngr.currLabel + "+" + funcOffset*4 + "]\n";
+
 
         argu.GlobalVTables.CurrentFunc.code += "MulS(num " + lableMngr.currLabel + ")\n";
         //System.out.println("MulS(num " + "t." + tempCounter + ")");
