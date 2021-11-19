@@ -3,30 +3,24 @@
 //Steven Carrasco (SID: 862060283)
 
 //compile code with: 
-//      javac V2VM.java -classpath vapor-parser.jar
+//      javac V2VM.java -cp vapor-parser.jar:
 //test run with:
-//      java V2VM < tests/Basic.vapor > tests/Basic.vaporm
+//      java -cp vapor-parser.jar: V2VM < tests/Basic.vapor > tests/Basic.vaporm
+//test run to standard print:
+//      java -cp vapor-parser.jar: V2VM < tests/Basic.vapor
 
+import cs132.vapor.ast.*;
+import cs132.vapor.ast.VBuiltIn.*;
 import cs132.vapor.parser.VaporParser;
-import cs132.vapor.ast.VaporProgram;
-import cs132.vapor.ast.VBuiltIn.Op;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.io.InputStream;
 import java.util.*;
-import cs132.vapor.ast.*;
 
 public class V2VM {
 
     public static void main(String [] args) throws Exception {
-        InputStream fileStream = System.in;
-        PrintStream error = new PrintStream("Error in parseVapor");
-        VaporProgram program = parseVapor(fileStream, error);
-
-        System.out.println("didn't crash");
-    }
-
-    public static VaporProgram parseVapor(InputStream in, PrintStream err) throws Exception {
+        //Initialize variables for VaporProgram var
+        InputStream in = System.in;
         Op[] ops = {
             Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS,
             Op.PrintIntS, Op.HeapAllocZ, Op.Error,
@@ -40,15 +34,60 @@ public class V2VM {
         };
         //Integer registerCount = registers.length;
         boolean allowStack = true;
-
         VaporProgram program;
+
         try {
+            //Create program variable
             program = VaporParser.run(new InputStreamReader(in), 1, 1, java.util.Arrays.asList(ops), allowLocals, registers, allowStack);
+
+
+
+			//Print VTable
+			for (VDataSegment vdataseg : program.dataSegments) {
+				
+                System.out.println("const "+vdataseg.ident);
+				
+                for (VOperand.Static vos : vdataseg.values) {
+					VLabelRef vlabelref = (VLabelRef) vos;
+					System.out.println(":"+vlabelref.ident);
+				}
+
+			}
+
+            //Iterate through functions, by instruction
+            for (VFunction vfunc : program.functions) {
+                int ins = 0;
+                //vfunc.params.length is the number of params in a function call
+                int outs = 0;
+                int locals = 0;
+                //vfunc.vars.length is the number of vars stored locally in a function
+                // ins, outs, and locals are only used if we need to spill
+                int labelNum = 0;
+                int instrNum = 0;
+                String funcName = "";
+
+                System.out.println("func " + vfunc.ident + " [in " + ins + ", out " + outs + ", local " + locals + "]");
+
+                for (VInstr vinstr : vfunc.body) {
+                    if(vfunc.labels != null){
+                        while (labelNum < vfunc.labels.length && instrNum == vfunc.labels[labelNum].instrIndex) {
+                            funcName = vfunc.labels[labelNum].ident;
+                            System.out.println(funcName + ":");
+                            labelNum++;
+                        }
+                    }
+                    vinstr.accept(new TestVisitor());
+                    instrNum++;
+                }
+                System.out.println("");
+            }
+
+
+
+
         }
         catch (Exception ex) {
-            err.println(ex.getMessage());
-            return null;
         }
-        return program;
+        
     }
 }

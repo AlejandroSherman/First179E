@@ -1,0 +1,7 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "vapor-parser.jar",
+        "cs132/vapor-parser.jar"
+    ]
+}
