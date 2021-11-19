@@ -1,5 +1,6 @@
 import cs132.vapor.ast.*;
 
+import java.util.Collection;
 import java.util.HashSet;
 
 public class Liveness {
@@ -27,10 +28,10 @@ public class Liveness {
             succ[i] = new HashSet<Integer>(0);
             if(instruct instanceof VGoto){
                 VGoto goto1 = (VGoto)instruct;
-                VAddr<VCodeLabel> target = goto1.target;
+                var target = goto1.target;
                 if(target instanceof VAddr<?>){
-                    var labelRef = (VAddr<VCodeLabel>)target;
-                    // succ(i) += labelRef.label.getTarget.instrIndex
+                    var labelRef = (VAddr.Label<VCodeLabel>)target;
+                    succ[i].add(labelRef.label.getTarget().instrIndex);
                 }
             }
             else{
@@ -39,7 +40,7 @@ public class Liveness {
                 }
                 if(instruct instanceof VBranch){
                     var branch = (VBranch)instruct;
-                    // succ(i) += branch.target.getTarget.instrIndex
+                    succ[i].add(branch.target.getTarget().instrIndex);
                 }
             }
         }
@@ -50,10 +51,12 @@ public class Liveness {
             for(var i = instructs.length-1; i != -1; i--){
                 var prevIns = ins[i].clone();
                 for(var s : succ[i]){
-                    // outs(i) ++= ins(s)
+                    outs[i].addAll((Collection)ins[(Integer)s]);
                 }
                 // ins(i) ++= outs(i)
+                ins[i].addAll((Collection)outs[(Integer)i]);
                 // ins(i) --= kills(i)
+                ins[i].removeAll((Collection)kills[i]);
                 changed = changed || (!prevIns.equals(ins[i]));
             }
         }
