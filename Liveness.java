@@ -53,9 +53,7 @@ public class Liveness {
                 for(var s : succ[i]){
                     outs[i].addAll((Collection)ins[(Integer)s]);
                 }
-                // ins(i) ++= outs(i)
                 ins[i].addAll((Collection)outs[(Integer)i]);
-                // ins(i) --= kills(i)
                 ins[i].removeAll((Collection)kills[i]);
                 changed = changed || (!prevIns.equals(ins[i]));
             }
