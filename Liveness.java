@@ -26,8 +26,8 @@ public class Liveness {
         for(var i = 0; i < instructs.length; i++){
             var instruct = instructs[i];
             succ[i] = new HashSet<Integer>(0);
-            if(instruct instanceof VGoto){
-                VGoto goto1 = (VGoto)instruct;
+            if(instruct instanceof VGoto goto1){
+                goto1 = (VGoto)instruct;
                 var target = goto1.target;
                 if(target instanceof VAddr<?>){
                     var labelRef = (VAddr.Label<VCodeLabel>)target;
@@ -38,8 +38,8 @@ public class Liveness {
                 if(i != instructs.length - 1){
                     succ[i].add(instructs[i+1]);
                 }
-                if(instruct instanceof VBranch){
-                    var branch = (VBranch)instruct;
+                if(instruct instanceof VBranch branch){
+                    branch = (VBranch)instruct;
                     succ[i].add(branch.target.getTarget().instrIndex);
                 }
             }

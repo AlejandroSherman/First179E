@@ -1,4 +1,8 @@
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class Pair {
@@ -6,6 +10,11 @@ public class Pair {
     HashSet<?>[] rightArray;
     Set<?> left;
     Set<?> right;
+    public List<Interval> intervals;
+    public Set<Interval> fixedIntervals;
+    public List<Integer> remainingRegs;
+    public Map<Integer, Interval> regs;
+    public HashSet<?>[] line2Var2Interval;
 
     public Pair(HashSet<?>[] leftSide, HashSet<?>[] rightSide){
         leftArray = leftSide;
@@ -18,5 +27,13 @@ public class Pair {
     }
 
     public Pair() {
+    }
+
+    public Pair(HashSet<?>[] line2Var2Interval2, Object stackUse) {
+    }
+
+    public Pair(ArrayList<Interval> intervals2, HashSet<Interval> fixedIntervals2,
+            Map<Integer, Map<Integer, Interval>> remainingRegs2,
+            HashMap<Integer, Map<Integer, Interval>> lineNo2Var2Interval) {
     }
 }
