@@ -20,7 +20,7 @@ public class LinearScan {
         var lineNo2Var2Interval = new HashMap<Integer, Map<Integer,Interval>>();
 
         for(int i = -1; i < activeSets.size(); i++){
-            lineNo2Var2Interval.put(i, new HashMap<Integer, Interval>());
+            lineNo2Var2Interval.put(i, new HashMap<>());
         }
         
         var intervals = new ArrayList<Interval>();
@@ -52,7 +52,7 @@ public class LinearScan {
         for(int lineNo = 0; lineNo < activeSets.size(); lineNo++){
             var activeSet = activeSets.get(lineNo);
 
-            for(var varNo : (ArrayList)activeSet){
+            for(var varNo : activeSet){
                 if(!var2Interval.containsKey(varNo)){
                     var interval = new Interval(lineNo, lineNo, null);
                     intervals.add(interval);
