@@ -36,4 +36,10 @@ public class Pair {
             Map<Integer, Map<Integer, Interval>> remainingRegs2,
             HashMap<Integer, Map<Integer, Interval>> lineNo2Var2Interval) {
     }
+
+    public Pair(String string, Integer stackUse, Integer outStackUse) {
+    }
+
+    public Pair(ArrayList<Interval> arrayList, Integer stackUse, Integer outStackUse) {
+    }
 }

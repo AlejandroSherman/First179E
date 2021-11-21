@@ -120,24 +120,25 @@ public class LinearScan {
                     break;
                 }
                 else{
-                    /* RegLoc regLoc = active.get(0).location;
-                    if(!initRegs.contains(regLoc)){
-                        // freeRegs.push(i)
+                    /* active(0).location match {
+                        case RegLoc(i) =>
+                            freeRegs.push(i)
+                        case _ =>
                     } */
                     remove(0, active, activeSize);
                 }
             }
         }
 
-        if(fixedIntervals.contains(interval)){
+        if(fixedIntervals.contains(interval)){ // insert interval to active
             insert(interval,active, activeSize);
         }
-        else if(activeSize != regCount){
+        else if(activeSize != regCount){ // get a free register and assign it to this interval
             var regNo = freeRegs.pop();
             //interval.location = new RegLoc(regNo);
             insert(interval, active, activeSize);
         }
-        else{
+        else{ // spill a (non-fixed) interval
             System.out.println(activeSize);
             System.out.println(freeRegs);
             var i = activeSize - 1;
