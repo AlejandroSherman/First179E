@@ -1,31 +1,32 @@
 import java.util.ArrayList;
 
 public class TextSeq {
-    private String str;
+    String text;
+    Integer indentCounter;
 
     public TextSeq(Integer indentCount) {
-        //TODO TextSeq
+        text = "";
+        indentCounter = indentCount;
     }
 
     public void incIndent() {
-        //TODO incIndent
-    }
-
-    public void println(String string) {
-        //TODO println
+        indentCounter++;
     }
 
     public void decIndent() {
-        //TODO decIndent
+        indentCounter--;
     }
 
-    public ArrayList<Interval> get() {
-        //TODO get
-        return null;
+    public void println(String string) {
+        text += string + "\n";
     }
 
     public void print(String string) {
-        //TODO print
+        text += string;
+    }
+
+    public String get() {
+        return text;
     }
 
 }

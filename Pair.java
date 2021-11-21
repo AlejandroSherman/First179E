@@ -32,14 +32,12 @@ public class Pair {
     public Pair(HashSet<?>[] line2Var2Interval2, Object stackUse) {
     }
 
-    public Pair(ArrayList<Interval> intervals2, HashSet<Interval> fixedIntervals2,
+    public Pair(List<Interval> intervals2, Set<Interval> fixedIntervals2,
             Map<Integer, Map<Integer, Interval>> remainingRegs2,
-            HashMap<Integer, Map<Integer, Interval>> lineNo2Var2Interval) {
+            Map<Integer, Map<Integer, Interval>> lineNo2Var2Interval) {
     }
 
     public Pair(String string, Integer stackUse, Integer outStackUse) {
     }
 
-    public Pair(ArrayList<Interval> arrayList, Integer stackUse, Integer outStackUse) {
-    }
 }
