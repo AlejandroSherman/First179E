@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 public class TextSeq {
     StringBuilder text;
     Integer indentCounter;
