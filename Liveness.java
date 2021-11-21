@@ -82,8 +82,13 @@ public class Liveness {
             actives.get(i).addAll(kills.get(i));
         }
 
-        System.out.println("actives: " + actives);
-        System.out.println("outs: " + outs);
+
+        for(var i = 0; i < instructs.length; i++){
+            //System.out.println("line in code: " + instructs[i].sourcePos.line);
+            //System.out.println("    var(s) active: " + actives.get(i));
+            //System.out.println("    var(s) out: " + outs.get(i));
+        }
+
 
         return new Pair(actives, outs);
     }
