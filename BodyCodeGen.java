@@ -11,7 +11,7 @@ public class BodyCodeGen {
     Integer paramCount; 
     List<VCodeLabel> labels; 
     Map<Integer, Map<Integer, Location>> allocation; 
-    Set<Integer> outRegs; //FIXME outRegs: Int=>Set[Int]
+    Map<Integer, Set<Integer>> outRegs; // outRegs: Int=>Set[Int]   // give int, get back set?
     Map<Integer, String> num2Reg;
     Map<Integer, String> num2ArgReg;
     List<Integer> regList;
@@ -22,31 +22,29 @@ public class BodyCodeGen {
     Integer stackUse2SaveSRegs = 0;
     Integer argRegCount = num2ArgReg.size();
     //FIXME var reg2Num = num2Reg.map(_.swap)
-    //FIXME var usedSRegs: Set[Int] = _
+    Set<Integer> usedSRegs = (Set)num2Reg;     // var usedSRegs: Set[Int] = _
     TextSeq text = new TextSeq(indentCount);     // this is a custom import "lesani.compiler.texttree.seq.TextSeq"
     
     public BodyCodeGen(List<VInstr> instructs, 
                         Integer paramCount, 
                         List<VCodeLabel> labels, 
                         Map<Integer, Map<Integer, Location>> allocation, 
-                        Set<Integer> outRegs, //FIXME outRegs: Int=>Set[Int]
+                        Map<Integer, Set<Integer>> outRegs, // outRegs: Int=>Set[Int]   // give int, get back set?
                         Map<Integer, String> num2Reg,
                         Map<Integer, String> num2ArgReg,
                         List<Integer> regList,
                         Integer varStacuUse, 
                         Integer indentCount){
-
         outStackUse = 0;
         stackUse2SaveRegs = 0;
         stackUse2SaveSRegs = 0;
         argRegCount = num2ArgReg.size();
-        //FIXME var reg2Num = num2Reg.map(_.swap)
-        //FIXME var usedSRegs: Set[Int] = _
+        //FIXME var reg2Num = num2Reg.map(num2Reg.swap)
+        Set<Integer> usedSRegs = (Set)num2Reg;      // var usedSRegs: Set[Int] = _
         TextSeq text = new TextSeq(indentCount);     // this is a custom import "lesani.compiler.texttree.seq.TextSeq"
     }
 
     public Pair genBodyCode(){
-
         // get used function registers from allocation map
         var usedRegs = new HashSet<Integer>(0);
         for(int i = 0; i < instructs.size(); i++){
@@ -62,23 +60,26 @@ public class BodyCodeGen {
             //FIXME sRegs.add(reg2Num.get("$s" + i));     // reg2Num commented out above
         }
 
-        //FIXME usedSRegs = usedRegs & sRegs;     // usedSRegs commented out above
+        usedSRegs.addAll(usedRegs);
+        usedSRegs.addAll(sRegs);
 
         text.incIndent(); 
 
-        for(int i = 0; i < argRegCount; i++){ // load arg regs to body regs
+        // load arg regs to body regs
+        for(int i = 0; i < argRegCount; i++){ 
             text.println(num2Reg.get(regList.get(i)) + " = " + num2ArgReg.get(i));
         }
 
-        for(int i = 0; i < argRegCount; i++){ // load in stack to body regs
+        // load in stack to body regs
+        for(int i = 0; i < argRegCount; i++){ 
             text.println(num2Reg.get(regList.get(i + argRegCount)) + " = in[" + i + "]");
         }
 
         // push used save regs $s0..$s7 when entering a function
-        /*FIXME for(var sReg : usedSRegs){       // usedSRegs commented out above
+        for(var sReg : usedSRegs){
             Integer offset = varStackUse + stackUse2SaveRegs++;
             text.println("local[" + offset + "] = " + num2Reg.get(sReg));
-        } */
+        }
 
         // for each instruction
         Integer labelIndex = 0;
@@ -90,9 +91,9 @@ public class BodyCodeGen {
             }
             text.incIndent();
             var instruct = instructs.get(i);
-            //FIXME var activeRegs = outRegs.get(i);
+            var activeRegs = outRegs.get(i);
 
-            //FIXME InstrVisitor.visitDispatch(instruct, allocation.get(i), activeRegs)
+            InstrVisitor.visitDispatch(instruct, allocation.get(i), activeRegs);
         }
 
         // pop save regs $s0..$s7 just before the ret
@@ -102,9 +103,9 @@ public class BodyCodeGen {
         var stackUse = varStackUse;
 
         stackUse += stackUse2SaveRegs;
-        //FIXME stackUse += usedSRegs.size;       // usedSRegs commented out above
+        stackUse += usedSRegs.size();
         
-        return new Pair(text.get(), stackUse, outStackUse); // return type: (Text, Int, Int)
+        return new Pair(text.get(), stackUse, outStackUse);
     }
     
 }

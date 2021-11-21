@@ -173,7 +173,7 @@ public class InstrVisitor extends VInstr.VisitorP<Pair, Exception> {
         text.println("ret");
     }
 
-    public void visitDispatch(VInstr instruct, Map<Integer, Location> map, Set<Integer> activeRegs){
+    public static void visitDispatch(VInstr instruct, Map<Integer, Location> map, Object activeRegs){
         try {
             //FIXME instruct.accept(this);
         } catch (Exception e) {

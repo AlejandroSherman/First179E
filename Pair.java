@@ -45,9 +45,8 @@ public class Pair {
             Map<Integer, Map<Integer, Interval>> lineNo2Var2Interval) {
         // TODO Pair(list, set, map, map)
     }
-    
+
     public Pair(HashSet<?>[] line2Var2Interval2, Object stackUse) {
         // TODO Pair(hashSet, object)
     }
-    
 }
