@@ -40,8 +40,6 @@ public class V2VM {
             //Create program variable
             program = VaporParser.run(new InputStreamReader(in), 1, 1, java.util.Arrays.asList(ops), allowLocals, registers, allowStack);
 
-
-
 			//Print VTable
 			for (VDataSegment vdataseg : program.dataSegments) {
 				
@@ -68,6 +66,10 @@ public class V2VM {
 
                 System.out.println("func " + vfunc.ident + " [in " + ins + ", out " + outs + ", local " + locals + "]");
 
+                
+                Liveness liveCheck = new Liveness();
+                liveCheck.checkLiveness(vfunc.body);
+
                 for (VInstr vinstr : vfunc.body) {
                     if(vfunc.labels != null){
                         while (labelNum < vfunc.labels.length && instrNum == vfunc.labels[labelNum].instrIndex) {
@@ -76,7 +78,7 @@ public class V2VM {
                             labelNum++;
                         }
                     }
-                    vinstr.accept(new TestVisitor());
+                    //vinstr.accept(new TestVisitor());
                     instrNum++;
                 }
                 System.out.println("");

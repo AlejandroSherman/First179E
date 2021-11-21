@@ -1,7 +1,4 @@
-
-
 import java.util.HashSet;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import cs132.vapor.ast.VAddr;
 import cs132.vapor.ast.VAssign;
@@ -21,11 +18,11 @@ import cs132.vapor.ast.VReturn;
 import cs132.vapor.ast.VVarRef;
 
 public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
-
+    
     @Override
     public Pair visit(VAssign assign) {
         var source = assign.source;
-        var gen = new HashSet<Integer>();
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
@@ -33,7 +30,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
         }
         
         var dest = (VVarRef.Local)assign.dest;
-        var kill = new HashSet<>(dest.index);
+        HashSet<Integer> kill = new HashSet<Integer>(dest.index);
 
         return new Pair(gen, kill);
     }
@@ -54,18 +51,14 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
 
         if(addr instanceof VAddr.Var<?>){
             var varAddr = (VAddr.Var<VFunction>)addr;
-            // gen += varAddr.'var'.asInstanceOf[VVarRef.Local].index
+            gen.add(((VVarRef.Local)(varAddr.var)).index);
         }
 
         var dest = call.dest;
-        HashSet<?> kill;
+        HashSet<Integer> kill;
 
-        if (dest != null){
-            kill = new HashSet<>(dest.index);
-        }
-        else{
-            kill = new HashSet<>();
-        }
+        if (dest != null) kill = new HashSet<Integer>(dest.index);
+        else kill = new HashSet<Integer>();
 
         return new Pair(gen, kill);
     }
@@ -73,7 +66,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
     @Override
     public Pair visit(VBuiltIn builtIn) {
         var args = builtIn.args;
-        var gen = new HashSet<>();
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         for(VOperand arg : args){
             if(arg instanceof VVarRef.Local){
@@ -82,12 +75,10 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
             }
         }
 
-        var kill = new HashSet<>();
+        HashSet<Integer> kill = new HashSet<Integer>();
         var dest = (VVarRef.Local)builtIn.dest;
 
-        if(dest != null){
-            kill = new HashSet<>(dest.index);
-        }
+        if(dest != null) kill = new HashSet<Integer>(dest.index);
         
         return new Pair(gen, kill);
     }
@@ -95,7 +86,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
     @Override
     public Pair visit(VMemWrite memWrite) {
         var source = memWrite.source;
-        var gen = new HashSet<>();
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
@@ -105,58 +96,79 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
         VMemRef dest = memWrite.dest;
 
         if(dest instanceof VMemRef.Global){
-            // TODO Finish visit(VMemWrite memWrite)
-
-            // val base = dest.asInstanceOf[VMemRef.Global].base
-            // if(base.isInstanceOf[VAddr.Var[VDataSegment]]){
-                // val varAddr = base.asInstanceOf[VAddr.Var[VDataSegment]]
-                // gen += varAddr.'var'.asInstanceOf[VVarRef.Local].index
-            // }
+            var base = ((VMemRef.Global)dest).base;
+            if(base instanceof VAddr.Var<?>){
+                var varAddr = (VAddr.Var<VDataSegment>)base;
+                gen.add(((VVarRef.Local)(varAddr.var)).index);
+            }
         }
 
-        var kill = new HashSet<>();
+        HashSet<Integer> kill = new HashSet<Integer>(0);
 
         return new Pair(gen, kill);
     }
 
     @Override
-    public Pair visit(VMemRead r) {
-        // TODO Auto-generated method stub
-        return null;
+    public Pair visit(VMemRead memRead) {
+        var gen = new HashSet<Integer>();
+        if(memRead.source instanceof VMemRef.Global){
+            var base = ((VMemRef.Global)(memRead.source)).base;
+            if(base instanceof VAddr.Var<?>){
+                var varAddr = (VAddr.Var<VDataSegment>)base;
+                gen.add(((VVarRef.Local)(varAddr.var)).index);
+            }
+        }
+
+        HashSet<Integer> kill = new HashSet<Integer>();
+
+        return new Pair(gen, kill);
     }
 
     @Override
     public Pair visit(VBranch branch) {
         var source = branch.value;
-        var gen = new HashSet<>();
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
             gen.add(varSource.index);
         }
 
-        var kill = new HashSet<>();
+        HashSet<Integer> kill = new HashSet<Integer>(0);
 
         return new Pair(gen, kill);
     }
 
     @Override
     public Pair visit(VGoto goto1) {
-        // TODO Auto-generated method stub
-        return null;
+        HashSet<Integer> gen = new HashSet<Integer>();
+        var target = goto1.target;
+
+        if(target instanceof VAddr.Var<?>){
+            var theVar = (VAddr.Var<VCodeLabel>)target;
+            VVarRef thisVar = theVar.var;
+
+            if(thisVar instanceof VVarRef.Local){
+                gen.add(((VVarRef.Local)thisVar).index);
+            }
+        }
+
+        var kill = new HashSet<Integer>();
+
+        return new Pair(gen, kill);
     }
 
     @Override
     public Pair visit(VReturn ret) {
         var source = ret.value;
-        var gen = new HashSet<>();
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
             gen.add(varSource.index);
         }
 
-        var kill = new HashSet<>();
+        HashSet<Integer> kill = new HashSet<Integer>(0);
 
         return new Pair(gen, kill);
     }
