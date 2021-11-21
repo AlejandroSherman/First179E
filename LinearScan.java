@@ -50,7 +50,7 @@ public class LinearScan {
         var2Interval.putAll(lineNo2Var2Interval.get(-1));
 
         for(int lineNo = 0; lineNo < activeSets.size(); lineNo++){
-            var activeSet = activeSets(lineNo);
+            var activeSet = activeSets.get(lineNo);
 
             for(var varNo : (ArrayList)activeSet){
                 if(!var2Interval.containsKey(varNo)){
@@ -66,17 +66,20 @@ public class LinearScan {
 
         for(var varNo : var2Interval.keySet()){
             var interval = var2Interval.get(varNo);
-            
+
             for(int lineNo = interval.startLine; lineNo < interval.finishLine; lineNo++){
                 // lineNo2Var2Interval(lineNo)(varNo) = interval
             }
         }
 
         System.out.println("Intervals:");
+
         for(var interval : intervals){
             System.out.println(interval);
         }
+
         System.out.println("lineNo2Var2Interval:");
+
         for(int lineNo = 0; lineNo < activeSets.size(); lineNo++){
             System.out.println("LineNo: " + lineNo + " " + lineNo2Var2Interval.get(lineNo));
         }
@@ -85,6 +88,11 @@ public class LinearScan {
     }
 
 
+
+    // Possibly make global: interval, active, activeSize
+    Interval interval;
+    ArrayList<Interval> active;
+    int activeSize = 0;
     private Object scan(List<Interval> intervals, Set<Interval> fixedIntervals, List<Integer> initRegs, Integer regCount) {
         // TODO scan()
         var stackOffset = -1;
@@ -94,15 +102,98 @@ public class LinearScan {
             freeRegs.push(reg);
         }
         
-        var active = new ArrayList<Interval>(regCount);
-        int activeSize = 0;
+        active = new ArrayList<>(regCount);
+        
         
         //nested method declaration???
+        // def insert()
+        // def remove()
+        
+        for(Interval currInterval : intervals){
+            interval = currInterval; // for global var assignment
+            System.out.println(activeSize);
+            System.out.println(freeRegs);
+
+            while(activeSize != 0){
+                var thisInterval = active.get(0);
+                if(thisInterval.finishLine >= interval.startLine){
+                    break;
+                }
+                else{
+                    /* RegLoc regLoc = active.get(0).location;
+                    if(!initRegs.contains(regLoc)){
+                        // freeRegs.push(i)
+                    } */
+                    remove(0, active, activeSize);
+                }
+            }
+        }
+
+        if(fixedIntervals.contains(interval)){
+            insert(interval,active, activeSize);
+        }
+        else if(activeSize != regCount){
+            var regNo = freeRegs.pop();
+            //interval.location = new RegLoc(regNo);
+            insert(interval, active, activeSize);
+        }
+        else{
+            System.out.println(activeSize);
+            System.out.println(freeRegs);
+            var i = activeSize - 1;
+            var done = false;
+            while(!done){
+                var last = active.get(i);
+                if(fixedIntervals.contains(last)){
+                    i--;
+                }
+                else if(last.finishLine < interval.finishLine){
+                    stackOffset++;
+                    //interval.location = new StackLoc(stackOffset);
+                    done = true;
+                }
+                else{
+                    remove(i, active, activeSize);
+                    interval.location = last.location;
+                    insert(interval, active, activeSize);
+                    stackOffset++;
+                    //last.location = new StackLoc(stackOffset);
+                    done = true;
+                }
+            }
+        }
+        stackOffset++;
 
         return null;
     }
 
-    private Object activeSets(int lineNo) {
-        return null;
+    private void insert(Interval interval, ArrayList<Interval> active, Integer activeSize){
+        int i = 0;
+
+        while(i != activeSize){
+            var thisInterval = active.get(i);
+            if(interval.finishLine < thisInterval.finishLine){ 
+                break; 
+            }
+            else{ 
+                i++; 
+            }
+        }
+        
+        for(int j = activeSize; j != i; j--){
+            active.add(j, active.get(j-1));
+            active.add(i, interval);
+            activeSize++;
+        }
     }
+
+    private void remove(Integer i, ArrayList<Interval> active, Integer activeSize){
+        for(var j = i; j < activeSize-1; j++){
+            active.add(j, active.get(j+1));
+        }
+        if(i < activeSize){
+            activeSize--;
+        }
+    }
+
 }
