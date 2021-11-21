@@ -22,7 +22,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
     @Override
     public Pair visit(VAssign assign) {
         var source = assign.source;
-        var gen = new HashSet<Integer>(0);
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
@@ -30,7 +30,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
         }
         
         var dest = (VVarRef.Local)assign.dest;
-        var kill = new HashSet<>(dest.index);
+        HashSet<Integer> kill = new HashSet<Integer>(dest.index);
 
         return new Pair(gen, kill);
     }
@@ -55,14 +55,10 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
         }
 
         var dest = call.dest;
-        HashSet<?> kill;
+        HashSet<Integer> kill;
 
-        if (dest != null){
-            kill = new HashSet<>(dest.index);
-        }
-        else{
-            kill = new HashSet<>();
-        }
+        if (dest != null) kill = new HashSet<Integer>(dest.index);
+        else kill = new HashSet<Integer>();
 
         return new Pair(gen, kill);
     }
@@ -70,7 +66,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
     @Override
     public Pair visit(VBuiltIn builtIn) {
         var args = builtIn.args;
-        var gen = new HashSet<>(0);
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         for(VOperand arg : args){
             if(arg instanceof VVarRef.Local){
@@ -79,12 +75,10 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
             }
         }
 
-        var kill = new HashSet<>();
+        HashSet<Integer> kill = new HashSet<Integer>();
         var dest = (VVarRef.Local)builtIn.dest;
 
-        if(dest != null){
-            kill = new HashSet<>(dest.index);
-        }
+        if(dest != null) kill = new HashSet<Integer>(dest.index);
         
         return new Pair(gen, kill);
     }
@@ -92,7 +86,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
     @Override
     public Pair visit(VMemWrite memWrite) {
         var source = memWrite.source;
-        var gen = new HashSet<>(0);
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
@@ -109,7 +103,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
             }
         }
 
-        var kill = new HashSet<>(0);
+        HashSet<Integer> kill = new HashSet<Integer>(0);
 
         return new Pair(gen, kill);
     }
@@ -125,7 +119,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
             }
         }
 
-        var kill = new HashSet<Integer>();
+        HashSet<Integer> kill = new HashSet<Integer>();
 
         return new Pair(gen, kill);
     }
@@ -133,21 +127,21 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
     @Override
     public Pair visit(VBranch branch) {
         var source = branch.value;
-        var gen = new HashSet<>(0);
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
             gen.add(varSource.index);
         }
 
-        var kill = new HashSet<>(0);
+        HashSet<Integer> kill = new HashSet<Integer>(0);
 
         return new Pair(gen, kill);
     }
 
     @Override
     public Pair visit(VGoto goto1) {
-        var gen = new HashSet<Integer>();
+        HashSet<Integer> gen = new HashSet<Integer>();
         var target = goto1.target;
 
         if(target instanceof VAddr.Var<?>){
@@ -159,7 +153,7 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
             }
         }
 
-        var kill = new HashSet<>();
+        var kill = new HashSet<Integer>();
 
         return new Pair(gen, kill);
     }
@@ -167,14 +161,14 @@ public class GenKillVisitor extends VInstr.VisitorR<Pair, Exception> {
     @Override
     public Pair visit(VReturn ret) {
         var source = ret.value;
-        var gen = new HashSet<>(0);
+        HashSet<Integer> gen = new HashSet<Integer>(0);
 
         if(source instanceof VVarRef.Local){
             var varSource = (VVarRef.Local)source;
             gen.add(varSource.index);
         }
 
-        var kill = new HashSet<>(0);
+        HashSet<Integer> kill = new HashSet<Integer>(0);
 
         return new Pair(gen, kill);
     }
