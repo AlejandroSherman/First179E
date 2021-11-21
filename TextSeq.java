@@ -1,11 +1,11 @@
 import java.util.ArrayList;
 
 public class TextSeq {
-    String text;
+    StringBuilder text;
     Integer indentCounter;
 
     public TextSeq(Integer indentCount) {
-        text = "";
+        text.append("");
         indentCounter = indentCount;
     }
 
@@ -18,15 +18,21 @@ public class TextSeq {
     }
 
     public void println(String string) {
-        text += string + "\n";
+        for(int i = 0; i < indentCounter; i++){
+            text.append("\t");
+        }
+        text.append(string + "\n");
     }
 
     public void print(String string) {
-        text += string;
+        for(int i = 0; i < indentCounter; i++){
+            text.append("\t");
+        }
+        text.append(string);
     }
 
     public String get() {
-        return text;
+        return text.toString();
     }
 
 }
