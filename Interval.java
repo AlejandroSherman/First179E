@@ -1,8 +1,8 @@
 public class Interval {
 
-    public int finishLine;
-    public int startLine;
-    public RegLoc location;
+    int finishLine;
+    int startLine;
+    RegLoc location;
 
     public Interval(int start, int finish, RegLoc regLoc) {
         startLine = start;

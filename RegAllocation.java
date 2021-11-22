@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Map;
-import java.lang.*;
 
 
 public class RegAllocation {

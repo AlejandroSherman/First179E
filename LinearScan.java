@@ -1,13 +1,7 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-import java.util.Map;
+import java.util.*;
 
 public class LinearScan {
-    public Pair linearScan(ArrayList<HashSet<Integer>> activeSets, Integer[] regPrams, Integer[] stackParams, Map<Integer, Map<Integer, Interval>>  regs ){
+    public Pair linearScan(List<Set<Integer>> activeSets, List<Integer> regPrams, List<Integer> stackParams, Map<Integer, Map<Integer,Interval>> regs ){
         Pair computedIntervals = computeIntervals(activeSets, regPrams, stackParams, regs);
         var stackUse = scan(computedIntervals.intervals, computedIntervals.fixedIntervals, computedIntervals.remainingRegs, (computedIntervals.regs).size());
 
@@ -15,12 +9,10 @@ public class LinearScan {
     }
 
     private Pair computeIntervals(List<Set<Integer>> activeSets, List<Integer> regParams, List<Integer> stackParams, Map<Integer, Map<Integer, Interval>> regs) {
-        // TODO computeIntervals()
-
         var lineNo2Var2Interval = new HashMap<Integer, Map<Integer,Interval>>();
 
         for(int i = -1; i < activeSets.size(); i++){
-            lineNo2Var2Interval.put(i, new HashMap<Integer, Interval>());
+            lineNo2Var2Interval.put(i, new HashMap<>());
         }
         
         var intervals = new ArrayList<Interval>();
@@ -30,18 +22,18 @@ public class LinearScan {
         for(int i = 0; i < regParams.size(); i++){
             var varNo = regParams.get(i);
             var reg = remainingRegs.get(0); // .head 
-            // remainingRegs = remainingRegs.tail;
+            //FIXME remainingRegs = remainingRegs.tail;
 
-            var interval = new Interval(-1, 0, new RegLoc(reg));
-            intervals.add(interval);
-            fixedIntervals.add(interval);
-            lineNo2Var2Interval.get(-1).put(varNo, interval);
-
+            var currInterval = new Interval(-1, 0, new RegLoc(reg));
+            intervals.add(currInterval);
+            fixedIntervals.add(currInterval);
+            lineNo2Var2Interval.get(-1).put(varNo, currInterval);
         }
 
         for(int i = 0; i < stackParams.size(); i++){
             var reg = remainingRegs.get(0); // .head
-            //remainingRegs = remainingRegs.tail;
+            //FIXME remainingRegs = remainingRegs.tail;
+
             var interval = new Interval(-1, 0, new RegLoc(reg));
             lineNo2Var2Interval.get(-1).put(stackParams.get(i), interval);
         }
@@ -52,7 +44,7 @@ public class LinearScan {
         for(int lineNo = 0; lineNo < activeSets.size(); lineNo++){
             var activeSet = activeSets.get(lineNo);
 
-            for(var varNo : (ArrayList)activeSet){
+            for(var varNo : activeSet){
                 if(!var2Interval.containsKey(varNo)){
                     var interval = new Interval(lineNo, lineNo, null);
                     intervals.add(interval);
@@ -94,11 +86,10 @@ public class LinearScan {
     ArrayList<Interval> active;
     int activeSize = 0;
     private Object scan(List<Interval> intervals, Set<Interval> fixedIntervals, List<Integer> initRegs, Integer regCount) {
-        // TODO scan()
         var stackOffset = -1;
         var freeRegs = new Stack<Integer>();
         
-        for (var reg : initRegs){ // need .reverse
+        for (var reg : initRegs){ //FIXME need to .reverse initRegs
             freeRegs.push(reg);
         }
         
@@ -120,24 +111,25 @@ public class LinearScan {
                     break;
                 }
                 else{
-                    /* RegLoc regLoc = active.get(0).location;
-                    if(!initRegs.contains(regLoc)){
-                        // freeRegs.push(i)
+                    /*FIXME active(0).location match {
+                        case RegLoc(i) =>
+                            freeRegs.push(i)
+                        case _ =>
                     } */
                     remove(0, active, activeSize);
                 }
             }
         }
 
-        if(fixedIntervals.contains(interval)){
+        if(fixedIntervals.contains(interval)){ // insert interval to active
             insert(interval,active, activeSize);
         }
-        else if(activeSize != regCount){
+        else if(activeSize != regCount){ // get a free register and assign it to this interval
             var regNo = freeRegs.pop();
-            //interval.location = new RegLoc(regNo);
+            //interval.location = new RegLoc(regNo);  // FIXME does this need a fix?
             insert(interval, active, activeSize);
         }
-        else{
+        else{ // spill a (non-fixed) interval
             System.out.println(activeSize);
             System.out.println(freeRegs);
             var i = activeSize - 1;
@@ -149,7 +141,7 @@ public class LinearScan {
                 }
                 else if(last.finishLine < interval.finishLine){
                     stackOffset++;
-                    //interval.location = new StackLoc(stackOffset);
+                    //FIXME interval.location = new StackLoc(stackOffset);
                     done = true;
                 }
                 else{
@@ -157,7 +149,7 @@ public class LinearScan {
                     interval.location = last.location;
                     insert(interval, active, activeSize);
                     stackOffset++;
-                    //last.location = new StackLoc(stackOffset);
+                    //FIXME last.location = new StackLoc(stackOffset);
                     done = true;
                 }
             }
@@ -168,7 +160,7 @@ public class LinearScan {
     }
 
     private void insert(Interval interval, ArrayList<Interval> active, Integer activeSize){
-        Integer i = 0;
+        int i = 0;
 
         while(i != activeSize){
             var thisInterval = active.get(i);
@@ -180,7 +172,7 @@ public class LinearScan {
             }
         }
         
-        for(Integer j = activeSize; j != i; j--){
+        for(int j = activeSize; j != i; j--){
             active.add(j, active.get(j-1));
             active.add(i, interval);
             activeSize++;
@@ -188,7 +180,7 @@ public class LinearScan {
     }
 
     private void remove(Integer i, ArrayList<Interval> active, Integer activeSize){
-        for(Integer j = i; j < activeSize-1; j++){
+        for(var j = i; j < activeSize-1; j++){
             active.add(j, active.get(j+1));
         }
         if(i < activeSize){

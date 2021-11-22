@@ -1,26 +1,25 @@
 import cs132.vapor.ast.*;
 
-import java.util.HashSet;
-import java.util.ArrayList;
+import java.util.*;
 
 public class Liveness {
 
     public Pair checkLiveness(VInstr[] instructs){        
-        ArrayList<HashSet<Integer>> ins = new ArrayList<HashSet<Integer>>();
-        ArrayList<HashSet<Integer>> outs = new ArrayList<HashSet<Integer>>();
-        ArrayList<HashSet<Integer>> gens = new ArrayList<HashSet<Integer>>();
-        ArrayList<HashSet<Integer>> kills = new ArrayList<HashSet<Integer>>();
-        ArrayList<HashSet<Integer>> succ = new ArrayList<HashSet<Integer>>();
-        ArrayList<HashSet<Integer>> actives = new ArrayList<HashSet<Integer>>();
+        ArrayList<HashSet<Integer>> ins = new ArrayList<>();
+        ArrayList<HashSet<Integer>> outs = new ArrayList<>();
+        ArrayList<HashSet<Integer>> gens = new ArrayList<>();
+        ArrayList<HashSet<Integer>> kills = new ArrayList<>();
+        ArrayList<HashSet<Integer>> succ = new ArrayList<>();
+        ArrayList<HashSet<Integer>> actives = new ArrayList<>();
 
         //Fill ArrayLists
         for (int i = 0; i < instructs.length; i++) {
-            ins.add(new HashSet<Integer>(0));
-            outs.add(new HashSet<Integer>(0));
-            gens.add(new HashSet<Integer>(0));
-            kills.add(new HashSet<Integer>(0));
-            succ.add(new HashSet<Integer>(0));
-            actives.add(new HashSet<Integer>(0));
+            ins.add(new HashSet<>(0));
+            outs.add(new HashSet<>(0));
+            gens.add(new HashSet<>(0));
+            kills.add(new HashSet<>(0));
+            succ.add(new HashSet<>(0));
+            actives.add(new HashSet<>(0));
         }
 
         GenKillVisitor genKillVisitor = new GenKillVisitor();
@@ -31,16 +30,16 @@ public class Liveness {
             kills.set(i,temp.right);
             ins.set(i, temp.left);
             ins.get(i).removeAll(temp.right);
-            outs.set(i, new HashSet<Integer>(0));
+            outs.set(i, new HashSet<>(0));
         }
 
 
         for(var i = 0; i < instructs.length; i++){
             var instruct = instructs[i];
-            succ.set(i, new HashSet<Integer>(0));
+            succ.set(i, new HashSet<>(0));
 
-            if(instruct instanceof VGoto){
-                VGoto goto1 = (VGoto)instruct;
+            if(instruct instanceof VGoto goto1){
+                goto1 = (VGoto)instruct;
                 var target = goto1.target;
                 if(target instanceof VAddr<?>){
                     var labelRef = (VAddr.Label<VCodeLabel>)target;
@@ -55,8 +54,8 @@ public class Liveness {
                     succ.get(i).add(i+1);
 
                 }
-                if(instruct instanceof VBranch){
-                    var branch = (VBranch)instruct;
+                if(instruct instanceof VBranch branch){
+                    branch = (VBranch)instruct;
                     succ.get(i).add(branch.target.getTarget().instrIndex);
                 }
             }
@@ -64,10 +63,10 @@ public class Liveness {
 
 
         Boolean changed = true;
-        while(changed){
+        while(Boolean.TRUE.equals(changed)){
             changed = false;
             for(Integer i = instructs.length-1; i != -1; i--){
-                HashSet<Integer> prevIns = new HashSet<Integer>(ins.get(i));
+                HashSet<Integer> prevIns = new HashSet<>(ins.get(i));
                 for(Integer s : succ.get(i)){
                     outs.get(i).addAll(ins.get(s));
                 }
@@ -84,7 +83,7 @@ public class Liveness {
 
 
         for(var i = 0; i < instructs.length; i++){
-            //System.out.println("line in code: " + instructs[i].sourcePos.line);
+            //FIXME System.out.println("line in code: " + instructs[i].sourcePos.line);
             //System.out.println("    var(s) active: " + actives.get(i));
             //System.out.println("    var(s) out: " + outs.get(i));
         }

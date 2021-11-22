@@ -1,3 +1,5 @@
-public abstract class Location {
-}
 
+
+public class Location {
+
+}
