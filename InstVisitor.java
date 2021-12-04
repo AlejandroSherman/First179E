@@ -53,7 +53,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
     public String genOperand(VOperand operand){
         if(operand instanceof VVarRef){
             var varRef = (VVarRef)operand;
-            return "genVarRef(varRef)"; //FIXME genVarRef(varRef);
+            return genVarRef(varRef);
         }
         else if(operand instanceof VLitStr){
             var litStr = (VLitStr)operand;
@@ -117,7 +117,18 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
         }
         else{
             var addrVar = (VAddr.Var)addr;
-            return "genVarRef(addrVar.var)"; //FIXME return genVarRef(addrVar.var);
+            return genVarRef(addrVar.var);
+        }
+    }
+
+    public String genVarRef(VVarRef varRef){
+        if(varRef instanceof VVarRef.Register){
+            var varRefReg = (VVarRef.Register)varRef;
+            var reg = varRefReg.ident;
+            return "$" + reg;
+        }
+        else{
+            return null;
         }
     }
 
@@ -127,19 +138,19 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
         var source = assign.source;
         if(source instanceof VLitInt){
             text.print("li ");
-            text.print("genVarRef(dest)"); //FIXME text.print(genVarRef(dest));
+            text.print(genVarRef(dest));
             text.print(" ");
             text.println(genOperand(source));
         }
         else if(source instanceof VLabelRef){
             text.print("la ");
-            text.print("genVarRef(dest)"); //FIXME text.print(genVarRef(dest));
+            text.print(genVarRef(dest));
             text.print(" ");
             text.println(genOperand(source));
         }
         else{
             text.print("move ");
-            text.print("genVarRef(dest)"); //FIXME text.print(genVarRef(dest));
+            text.print(genVarRef(dest));
             text.print(" ");
             text.println(genOperand(source));
         }
@@ -165,7 +176,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             var arg = args[0];
             if(arg instanceof VVarRef){
                 var varRef = (VVarRef)arg;
-                text.println("move $a0 " + "genVarRef(varRef)"); //FIXME + genVarRef(varRef));
+                text.println("move $a0 " + genVarRef(varRef));
             }
             else if(arg instanceof VLitInt){
                 var litInt = (VLitInt)arg;
@@ -184,7 +195,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 text.println("move $a0 " + genOperand(arg));
             }
             text.println("jal _heapAlloc");
-            text.println("move " + "genVarRef(dest)" + " $v0"); //FIXME text.println("move " + genVarRef(dest) + " $v0");
+            text.println("move " + genVarRef(dest) + " $v0");
             return;
         }
         else if(op == Op.Error){
@@ -205,11 +216,87 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 else{
                     value = litInt0 * litInt1;
                 }
-                text.println("li " + "genVarRef(dest)" + " " + value); //FIXME text.println("li " + genVarRef(dest) + " " + value);
+                text.println("li " + genVarRef(dest) + " " + value);
                 return;
             }
+            String arg0Str;
+            if(arg0 instanceof VLitInt){
+                var litInt = (VLitInt)arg0;
+                text.println("li $t9 " + litInt.value);
+                arg0Str = "$t9";
+            }
+            else{
+                arg0Str = genOperand(arg0);
+            }
+            String arg1Str = "";
+            if(arg1 instanceof VLitInt){
+                var litInt = (VLitInt)arg1;
+                text.println("li $t9 " + litInt.value);
+                arg1Str = "$t9";
+            }
+            else{
+                arg1Str = genOperand(arg1);
+            }
+            String mipsOp = "";
+            if(op == Op.Sub){
+                mipsOp = "subu";
+            }
+            else if(op == Op.MulS){
+                mipsOp = "mul";
+            }
+            text.println(mipsOp + " " + genVarRef(dest) + " " + arg0Str + " " + arg1Str);
+            return;
         }
-        //TODO finish builtins
+        else if((op == Op.Add) || (op == Op.Lt) || (op == Op.LtS)){
+            var arg0 = args[0];
+            var arg1 = args[1];
+            if((arg0 instanceof VLitInt) && (arg1 instanceof VLitInt)){
+                var litInt0 = ((VLitInt)arg0).value;
+                var litInt1 = ((VLitInt)arg1).value;
+                Integer value = 0;
+                if(op == Op.Add){
+                    value = litInt0 + litInt1;
+                }
+                else{
+                    if(litInt0 < litInt1){
+                        value = 1;
+                    }
+                    else{
+                        value = 0;
+                    }
+                }
+                text.println("li " + genVarRef(dest) + " " + value);
+                return;
+            }
+            String theI = "";
+            String arg0Str = "";
+            if(arg0 instanceof VLitInt){
+                var litInt = (VLitInt)arg0;
+                text.println("li $t9 " + litInt.value);
+                arg0Str = "$t9";
+            }
+            else{
+                arg0Str = genOperand(arg0);
+            }
+            String arg1Str = "";
+            if(arg1 instanceof VLitInt){
+                var litInt = (VLitInt)arg1;
+                theI = "i";
+                arg1Str = String.valueOf(litInt.value);
+            }
+            else{
+                arg1Str = genOperand(arg1);
+            }
+            String mipsOp = "";
+            if(op == Op.Add){
+                mipsOp = "add" + theI + "u";
+            }
+            else if((op == Op.Lt) || (op == Op.LtS)){
+                mipsOp = "slt" + theI;
+            }
+            text.println(mipsOp + " " + genVarRef(dest) + " " + arg0Str + " " + arg1Str);
+            return;
+        }
     }
 
     public void genLib(){
@@ -266,15 +353,30 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
     }
 
     @Override
-    public void visit(VMemRead r) throws Exception {
-        // TODO Auto-generated method stub
-        
+    public void visit(VMemRead memRead) throws Exception {
+        var dest = memRead.dest;
+        var source = memRead.source;
+        text.print("lw ");
+        text.print(genVarRef(dest));
+        text.print(" ");
+        text.println(genMemRef(source));
     }
 
     @Override
-    public void visit(VBranch b) throws Exception {
-        // TODO Auto-generated method stub
-        
+    public void visit(VBranch branch) throws Exception {
+        var positive = branch.positive;
+        var value = branch.value;
+        var label = branch.target.ident;
+        if(positive){
+            text.print("bnez");
+        }
+        else{
+            text.print("beqz");
+        }
+        text.print(" ");
+        text.print(genOperand(value));
+        text.print(" ");
+        text.println(label);
     }
 
     @Override
