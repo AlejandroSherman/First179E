@@ -305,10 +305,15 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             return "mul";
         }
         else if(op == Op.Add){
-            return "add" + theI + "u";
+            String ret = "add" + theI + "u";
+            theI = "";
+            return ret;
         }
         else if((op == Op.Lt) || (op == Op.LtS)){
-            return "slt" + theI;
+            String ret = "slt" + theI;
+            theI = "";
+            return ret;
+            
         }
         else{
             return "";
