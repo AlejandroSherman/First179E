@@ -22,9 +22,6 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
         localCount = stack.local;
         outCount = stack.out;
         frameSize = (localCount + outCount + 2) * 4;
-/*         localAddr = ((outCount + functionCounter) * 4) + "($sp)";
-        outAddr = (functionCounter * 4) + "($sp)";
-        inAddr = (functionCounter * 4) + "($fp)"; */
         instructs = func.body;
         labels = func.labels;
 
@@ -108,11 +105,10 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             var stackType = memRefStack.region;
             var index = memRefStack.index;
 
-            //TODO finish genMemRef()
-            if(stackType.getClass() == stackType.In.getClass()){
+            if(stackType == stackType.In){
                 return inAddr(index);
             }
-            else if(stackType.getClass() == stackType.Out.getClass()){
+            else if(stackType == stackType.Out){
                 return outAddr(index);
             }
             else{
@@ -178,6 +174,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
         }
     }
 
+    String theI = "";
     @Override
     public void visit(VBuiltIn builtIn) throws Exception {
         var op = builtIn.op;
@@ -220,7 +217,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             var arg1 = args[1];
             if(arg0 instanceof VLitInt && arg1 instanceof VLitInt){
                 var litInt0 = ((VLitInt)arg0).value;
-                var litInt1 = ((VLitInt)arg0).value;
+                var litInt1 = ((VLitInt)arg1).value;
                 int value;
                 if(op == Op.Sub){
                     value = litInt0 - litInt1;
@@ -231,31 +228,9 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 text.println("li " + genVarRef(dest) + " " + value);
                 return;
             }
-            String arg0Str;
-            if(arg0 instanceof VLitInt){
-                var litInt = (VLitInt)arg0;
-                text.println("li $t9 " + litInt.value);
-                arg0Str = "$t9";
-            }
-            else{
-                arg0Str = genOperand(arg0);
-            }
-            String arg1Str = "";
-            if(arg1 instanceof VLitInt){
-                var litInt = (VLitInt)arg1;
-                text.println("li $t9 " + litInt.value);
-                arg1Str = "$t9";
-            }
-            else{
-                arg1Str = genOperand(arg1);
-            }
-            String mipsOp = "";
-            if(op == Op.Sub){
-                mipsOp = "subu";
-            }
-            else if(op == Op.MulS){
-                mipsOp = "mul";
-            }
+            String arg0Str = Arg0Str(arg0);
+            String arg1Str = Arg1Str(arg0);
+            String mipsOp = MipsOp(op);
             text.println(mipsOp + " " + genVarRef(dest) + " " + arg0Str + " " + arg1Str);
             return;
         }
@@ -280,7 +255,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 text.println("li " + genVarRef(dest) + " " + value);
                 return;
             }
-            String theI = "";
+            
             String arg0Str = "";
             if(arg0 instanceof VLitInt){
                 var litInt = (VLitInt)arg0;
@@ -299,15 +274,49 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             else{
                 arg1Str = genOperand(arg1);
             }
-            String mipsOp = "";
-            if(op == Op.Add){
-                mipsOp = "add" + theI + "u";
-            }
-            else if((op == Op.Lt) || (op == Op.LtS)){
-                mipsOp = "slt" + theI;
-            }
+            String mipsOp = MipsOp(op);
             text.println(mipsOp + " " + genVarRef(dest) + " " + arg0Str + " " + arg1Str);
             return;
+        }
+    }
+
+    public String Arg0Str(VOperand arg0){
+        if(arg0 instanceof VLitInt){
+            var litInt = (VLitInt)arg0;
+            text.println("li $t9 " + litInt.value);
+            return "$t9";
+        }
+        else{
+            return genOperand(arg0);
+        }
+    }
+
+    public String Arg1Str(VOperand arg1){
+        if(arg1 instanceof VLitInt){
+            var litInt = (VLitInt)arg1;
+            text.println("li $t9 " + litInt.value);
+            return "$t9";
+        }
+        else{
+            return genOperand(arg1);
+        }
+    }
+    
+    public String MipsOp(Op op){
+        if(op == Op.Sub){
+            return "subu";
+        }
+        else if(op == Op.MulS){
+            return "mul";
+        }
+        else if(op == Op.Add){
+            return "add" + theI + "u";
+        }
+        else if((op == Op.Lt) || (op == Op.LtS)){
+            return "slt" + theI;
+        }
+        else{
+            return "";
         }
     }
 
