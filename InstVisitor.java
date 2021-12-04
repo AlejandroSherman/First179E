@@ -278,8 +278,8 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
     public String Arg1Str(VOperand arg1){
         if(arg1 instanceof VLitInt){
             var litInt = (VLitInt)arg1;
-            text.println("li $t9 " + litInt.value);
-            return "$t9";
+            //text.println("li $t9 " + litInt.value);
+            return genOperand(arg1);
         }
         else{
             return genOperand(arg1);
