@@ -22,9 +22,9 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
         localCount = stack.local;
         outCount = stack.out;
         frameSize = (localCount + outCount + 2) * 4;
-        localAddr = ((outCount + functionCounter) * 4) + "($sp)";
+/*         localAddr = ((outCount + functionCounter) * 4) + "($sp)";
         outAddr = (functionCounter * 4) + "($sp)";
-        inAddr = (functionCounter * 4) + "($fp)";
+        inAddr = (functionCounter * 4) + "($fp)"; */
         instructs = func.body;
         labels = func.labels;
 
@@ -48,6 +48,18 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             visitDispatch(instruct);
         }
         text.decIndent();
+    }
+
+    public String localAddr(Integer i){
+        return ((outCount + i) * 4) + "($sp)";
+    }
+
+    public String outAddr(Integer i){
+        return (i * 4) + "($sp)";
+    }
+
+    public String inAddr(Integer i){
+        return (i * 4) + "($fp)";
     }
 
     public String genOperand(VOperand operand){
@@ -98,13 +110,13 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
 
             //TODO finish genMemRef()
             if(stackType.getClass() == stackType.In.getClass()){
-                return "inAdr(index)"; //FIXME return inAdr(index);
+                return inAddr(index);
             }
             else if(stackType.getClass() == stackType.Out.getClass()){
-                return "outAdr(index)"; //FIXME return outAdr(index);
+                return outAddr(index);
             }
             else{
-                return "localAdr(index)"; //FIXME return localAdr(index);
+                return localAddr(index);
             }
             
         }
