@@ -229,7 +229,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 return;
             }
             String arg0Str = Arg0Str(arg0);
-            String arg1Str = Arg1Str(arg0);
+            String arg1Str = Arg1Str(arg1);
             String mipsOp = MipsOp(op);
             text.println(mipsOp + " " + genVarRef(dest) + " " + arg0Str + " " + arg1Str);
             return;
@@ -256,24 +256,8 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 return;
             }
             
-            String arg0Str = "";
-            if(arg0 instanceof VLitInt){
-                var litInt = (VLitInt)arg0;
-                text.println("li $t9 " + litInt.value);
-                arg0Str = "$t9";
-            }
-            else{
-                arg0Str = genOperand(arg0);
-            }
-            String arg1Str = "";
-            if(arg1 instanceof VLitInt){
-                var litInt = (VLitInt)arg1;
-                theI = "i";
-                arg1Str = String.valueOf(litInt.value);
-            }
-            else{
-                arg1Str = genOperand(arg1);
-            }
+            String arg0Str = Arg0Str(arg0);
+            String arg1Str = Arg1Str2(arg1);
             String mipsOp = MipsOp(op);
             text.println(mipsOp + " " + genVarRef(dest) + " " + arg0Str + " " + arg1Str);
             return;
@@ -296,6 +280,17 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             var litInt = (VLitInt)arg1;
             text.println("li $t9 " + litInt.value);
             return "$t9";
+        }
+        else{
+            return genOperand(arg1);
+        }
+    }
+
+    public String Arg1Str2(VOperand arg1){
+        if(arg1 instanceof VLitInt){
+            var litInt = (VLitInt)arg1;
+            theI = "i";
+            return String.valueOf(litInt.value);
         }
         else{
             return genOperand(arg1);
