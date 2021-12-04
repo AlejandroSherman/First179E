@@ -53,7 +53,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
     public String genOperand(VOperand operand){
         if(operand instanceof VVarRef){
             var varRef = (VVarRef)operand;
-            return "genVarRef(varRef)"; //genVarRef(varRef);
+            return "genVarRef(varRef)"; //FIXME genVarRef(varRef);
         }
         else if(operand instanceof VLitStr){
             var litStr = (VLitStr)operand;
@@ -84,25 +84,62 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
         return "";
     }
 
+    public String genMemRef(VMemRef memRef){
+        if(memRef instanceof VMemRef.Global){
+            var memRefGlobal = (VMemRef.Global)memRef;
+            var baseAddr = memRefGlobal.base;
+            var offset = memRefGlobal.byteOffset;
+            return offset + "(" + genAddr(baseAddr) + ")";
+        }
+        else{
+            var memRefStack = (VMemRef.Stack)memRef;
+            var stackType = memRefStack.region;
+            var index = memRefStack.index;
+
+            //TODO finish genMemRef()
+            if(stackType.getClass() == stackType.In.getClass()){
+                return "inAdr(index)"; //FIXME return inAdr(index);
+            }
+            else if(stackType.getClass() == stackType.Out.getClass()){
+                return "outAdr(index)"; //FIXME return outAdr(index);
+            }
+            else{
+                return "localAdr(index)"; //FIXME return localAdr(index);
+            }
+            
+        }
+    }
+
+    public String genAddr(VAddr addr){
+        if(addr instanceof VAddr.Label){
+            var addrLocal = (VAddr.Label)addr;
+            return addrLocal.label.ident;
+        }
+        else{
+            var addrVar = (VAddr.Var)addr;
+            return "genVarRef(addrVar.var)"; //FIXME return genVarRef(addrVar.var);
+        }
+    }
+
     @Override
     public void visit(VAssign assign) throws Exception {
         var dest = assign.dest;
         var source = assign.source;
         if(source instanceof VLitInt){
             text.print("li ");
-            text.print("genVarRef(dest)"); // text.print(genVarRef(dest));
+            text.print("genVarRef(dest)"); //FIXME text.print(genVarRef(dest));
             text.print(" ");
             text.println(genOperand(source));
         }
         else if(source instanceof VLabelRef){
             text.print("la ");
-            text.print("genVarRef(dest)"); //text.print(genVarRef(dest));
+            text.print("genVarRef(dest)"); //FIXME text.print(genVarRef(dest));
             text.print(" ");
             text.println(genOperand(source));
         }
         else{
             text.print("move ");
-            text.print("genVarRef(dest)"); //text.print(genVarRef(dest));
+            text.print("genVarRef(dest)"); //FIXME text.print(genVarRef(dest));
             text.print(" ");
             text.println(genOperand(source));
         }
@@ -111,10 +148,10 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
     @Override
     public void visit(VCall call) throws Exception {
         if(call.addr instanceof VAddr.Var){
-            text.println("jalr " + "genAddr(call.addr)"); // + genAddr(call.addr));
+            text.println("jalr " + genAddr(call.addr));
         }
         else{
-            text.println("jal " + "genAddr(call.addr)"); // + genAddr(call.addr));
+            text.println("jal " + genAddr(call.addr));
         }
     }
 
@@ -128,7 +165,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             var arg = args[0];
             if(arg instanceof VVarRef){
                 var varRef = (VVarRef)arg;
-                text.println("move $a0 " + "genVarRef(varRef)"); // + genVarRef(varRef));
+                text.println("move $a0 " + "genVarRef(varRef)"); //FIXME + genVarRef(varRef));
             }
             else if(arg instanceof VLitInt){
                 var litInt = (VLitInt)arg;
@@ -147,7 +184,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 text.println("move $a0 " + genOperand(arg));
             }
             text.println("jal _heapAlloc");
-            text.println("move " + "genVarRef(dest)" + " $v0"); //TextSeq.println("move " + genVarRef(dest) + " $v0");
+            text.println("move " + "genVarRef(dest)" + " $v0"); //FIXME text.println("move " + genVarRef(dest) + " $v0");
             return;
         }
         else if(op == Op.Error){
@@ -168,7 +205,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
                 else{
                     value = litInt0 * litInt1;
                 }
-                text.println("li " + "genVarRef(dest)" + " " + value); //TextSeq.println("li " + genVarRef(dest) + " " + value);
+                text.println("li " + "genVarRef(dest)" + " " + value); //FIXME text.println("li " + genVarRef(dest) + " " + value);
                 return;
             }
         }
@@ -212,19 +249,19 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
             text.print("la $t9 ");
             text.println(genOperand(source));
             text.print("sw $t9 ");
-            text.println("genMemRef(dest)"); //text.println(genMemRef(dest));
+            text.println(genMemRef(dest));
         }
         else if(source instanceof VLitInt){
             text.print("li $t9 ");
             text.println(genOperand(source));
             text.print("sw $t9 ");
-            text.println("genMemRef(dest)"); //text.println(genMemRef(dest));
+            text.println(genMemRef(dest));
         }
         else{
             text.print("sw ");
-            text.println(genOperand(source));
+            text.print(genOperand(source));
             text.print(" ");
-            text.println("genMemRef(dest)"); //text.println(genMemRef(dest));
+            text.println(genMemRef(dest));
         }
     }
 
@@ -244,7 +281,7 @@ public class InstVisitor extends VInstr.Visitor<Exception> {
     public void visit(VGoto g) throws Exception {
         text.print("j ");
         var addr = g.target;
-        text.println("genAddr(addr)"); //TextSeq.println(genAddr(addr));        
+        text.println(genAddr(addr));    
     }
 
     @Override
